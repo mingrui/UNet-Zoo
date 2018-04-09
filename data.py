@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import os
 import scipy.io as sio
-from dataParser import getMaskFileName, getImg
+from dataParser import getMaskFileName, getImg, get_truth_file
 import torchvision.transforms as tr
 
 
@@ -30,11 +30,12 @@ class BraTSDatasetUnet(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "Train/"
+            folder = dataset_folder + "Train_png/"
         else:
-            folder = dataset_folder + "Test/"
+            folder = dataset_folder + "Test_png/"
 
-        for file in os.listdir(folder):
+        file_list = os.listdir(folder)
+        for file in file_list:
             if file.endswith(".png"):
                 filename = os.path.splitext(file)[0]
                 filename_fragments = filename.split("_")
@@ -47,9 +48,12 @@ class BraTSDatasetUnet(Dataset):
                     # otherwise memory explodes
 
                     # rawImage = getImg(folder + file)
-                    self.__im.append(folder + file)
+                    self.__im.append(os.path.join(folder, file))
+                    # print(self.__im[-1])
                     # 3. read mask image
-                    mask_file = getMaskFileName(file)
+                    # mask_file = getMaskFileName(file)
+                    mask_file = get_truth_file(file, keywords[0])
+                    # print(mask_file)
                     # maskImage = getImg(folder + mask_file)
                     self.__mask.append(folder + mask_file)
         # self.dataset_size = len(self.__file)

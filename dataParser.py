@@ -8,13 +8,15 @@ from skimage import io
 
 def getMaskFileName(file):
 
-    mask_file = file.replace("flair.png", "seg.png")
-    mask_file = mask_file.replace("t1.png", "seg.png")
-    mask_file = mask_file.replace("t2.png", "seg.png")
-    mask_file = mask_file.replace("t1ce.png", "seg.png")
+    mask_file = file.replace("flair.png", "truth.png")
+    mask_file = mask_file.replace("t1.png", "truth.png")
+    mask_file = mask_file.replace("t2.png", "truth.png")
+    mask_file = mask_file.replace("t1ce.png", "truth.png")
 
     return mask_file
 
+def get_truth_file(file, modality):
+    return file.replace(modality, 'truth')
 
 def getImg(imgpathway):
     # image_file = Image.open(imgpathway)  # open colour image

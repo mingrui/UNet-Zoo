@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import scipy.io as sio
@@ -29,29 +30,33 @@ import numpy as np
 # %% Training settings
 parser = argparse.ArgumentParser(
     description='UNet + BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=4, metavar='N',
+parser.add_argument('--batch-size', type=int, default=3, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=2, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=1, metavar='N',
+parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
-parser.add_argument('--cuda', action='store_true', default=False,
+parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--size', type=int, default=128, metavar='N',
+parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
-parser.add_argument('--load', type=str, default=None, metavar='str',
+parser.add_argument('--load', type=str,
+                    default='/mnt/960EVO/workspace/UNet-Zoo/unet-final-16-10-0.001',
+                    metavar='str',
                     help='weight file to load (default: None)')
-parser.add_argument('--data-folder', type=str, default='./Data/', metavar='str',
+parser.add_argument('--data-folder', type=str,
+                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
+                    metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
-parser.add_argument('--modality', type=str, default='flair', metavar='str',
+parser.add_argument('--modality', type=str, default='t2', metavar='str',
                     help='Modality to use for training (default: flair)')
 parser.add_argument('--optimizer', type=str, default='SGD', metavar='str',
                     help='Optimizer (default: SGD)')
@@ -97,12 +102,13 @@ if args.optimizer == 'ADAM':
     optimizer = optim.Adam(model.parameters(), lr=args.lr,
                            betas=(args.beta1, args.beta2))
 
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
 # Defining Loss Function
 criterion = DICELossMultiClass()
 
-
-def train(epoch, loss_lsit):
+def train(epoch, scheduler, loss_lsit):
+    scheduler.step()
     model.train()
     for batch_idx, (image, mask) in enumerate(train_loader):
         if args.cuda:
@@ -147,24 +153,24 @@ def test(train_accuracy=False, save_output=False):
         maxes, out = torch.max(output, 1, keepdim=True)
 
         if save_output and (not train_accuracy):
-            np.save('./npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
+            np.save('npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
                                                                         batch_idx),
                     out.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-batch-{}-masks.npy'.format(args.save,
+            np.save('npy-files/out-files/{}-batch-{}-masks.npy'.format(args.save,
                                                                          batch_idx),
                     mask.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
+            np.save('npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
                                                                           batch_idx),
                     image.data.float().cpu().numpy())
 
         if save_output and train_accuracy:
-            np.save('./npy-files/out-files/{}-train-batch-{}-outs.npy'.format(args.save,
+            np.save('npy-files/out-files/{}-train-batch-{}-outs.npy'.format(args.save,
                                                                               batch_idx),
                     out.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-train-batch-{}-masks.npy'.format(args.save,
+            np.save('npy-files/out-files/{}-train-batch-{}-masks.npy'.format(args.save,
                                                                                batch_idx),
                     mask.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-train-batch-{}-images.npy'.format(args.save,
+            np.save('npy-files/out-files/{}-train-batch-{}-images.npy'.format(args.save,
                                                                                 batch_idx),
                     image.data.float().cpu().numpy())
 
@@ -183,7 +189,7 @@ def test(train_accuracy=False, save_output=False):
 if args.train:
     loss_list = []
     for i in tqdm(range(args.epochs)):
-        train(i, loss_list)
+        train(i, exp_lr_scheduler, loss_list)
         test()
 
     plt.plot(loss_list)
@@ -191,12 +197,12 @@ if args.train:
                                                 args.epochs, args.lr))
     plt.xlabel("Number of iterations")
     plt.ylabel("Average DICE loss per batch")
-    plt.savefig("./plots/{}-UNet_Loss_bs={}_ep={}_lr={}.png".format(args.save,
+    plt.savefig("plots/{}-UNet_Loss_bs={}_ep={}_lr={}.png".format(args.save,
                                                                     args.batch_size,
                                                                     args.epochs,
                                                                     args.lr))
 
-    np.save('./npy-files/loss-files/{}-UNet_Loss_bs={}_ep={}_lr={}.npy'.format(args.save,
+    np.save('npy-files/loss-files/{}-UNet_Loss_bs={}_ep={}_lr={}.npy'.format(args.save,
                                                                                args.batch_size,
                                                                                args.epochs,
                                                                                args.lr),
