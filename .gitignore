@@ -8,3 +8,15 @@ plt
 sio
 
 torch
+
+__pycache__/
+
+argparse
+
+*.mat
+
+*.npy
+
+*.png
+
+\.fuse_hidden000a1a4900000002
