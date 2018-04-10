@@ -29,17 +29,17 @@ import numpy as np
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=4, metavar='N',
+parser.add_argument('--batch-size', type=int, default=8, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=1, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
-parser.add_argument('--cuda', action='store_true', default=False,
+parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
@@ -47,11 +47,13 @@ parser.add_argument('--size', type=int, default=128, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str, default=None, metavar='str',
                     help='weight file to load (default: None)')
-parser.add_argument('--data-folder', type=str, default='./Data/', metavar='str',
+parser.add_argument('--data-folder', type=str,
+                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
+                    metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
-parser.add_argument('--modality', type=str, default='flair', metavar='str',
+parser.add_argument('--modality', type=str, default='t2', metavar='str',
                     help='Modality to use for training (default: flair)')
 parser.add_argument('--optimizer', type=str, default='ADAM', metavar='str',
                     help='Optimizer (default: SGD)')

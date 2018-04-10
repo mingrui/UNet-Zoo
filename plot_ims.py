@@ -11,7 +11,8 @@ final_outs = []
 final_masks = []
 final_images = []
 
-loss = np.load('npy-files/loss-files/OutMasks-UNet_Loss_bs=2_ep=10_lr=0.001.npy')
+loss = np.load('npy-files/loss-files/OutMasks-bdclstm_bs=8_ep=1_lr=0.001.npy')
+base_name = 'OutMasks'
 
 out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
 f_lst = os.listdir(out_folder)
@@ -21,11 +22,11 @@ print('file count : ', f_count)
 
 for i in range(f_count):
     outs = np.load(
-        'npy-files/out-files/OutMasks-batch-{}-outs.npy'.format(i))
+        'npy-files/out-files/'+base_name+'-batch-{}-outs.npy'.format(i))
     masks = np.load(
-        'npy-files/out-files/OutMasks-batch-{}-masks.npy'.format(i))
+        'npy-files/out-files/'+base_name+'-batch-{}-masks.npy'.format(i))
     images = np.load(
-        'npy-files/out-files/OutMasks-batch-{}-images.npy'.format(i))
+        'npy-files/out-files/'+base_name+'-batch-{}-images.npy'.format(i))
 
     final_outs.append(outs)
     final_masks.append(masks)

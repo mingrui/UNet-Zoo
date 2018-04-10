@@ -13,17 +13,19 @@ import torchvision.transforms as tr
 from data import BraTSDatasetLSTM
 from CLSTM import BDCLSTM
 from models import *
+import numpy as np
+from tqdm import tqdm
 
 # %% import transforms
 
-UNET_MODEL_FILE = 'unetsmall-100-10-0.001'
-MODALITY = ["flair"]
+UNET_MODEL_FILE = 'unetsmall-final-8-10-0.001'
+MODALITY = ["t2"]
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=4, metavar='N',
+parser.add_argument('--batch-size', type=int, default=8, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=8, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
@@ -33,7 +35,7 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--mom', type=float, default=0.99, metavar='MOM',
                     help='SGD momentum (default=0.99)')
-parser.add_argument('--cuda', action='store_true', default=False,
+parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
@@ -43,8 +45,16 @@ parser.add_argument('--size', type=int, default=128, metavar='N',
                     help='imsize')
 parser.add_argument('--drop', action='store_true', default=False,
                     help='enables drop')
-parser.add_argument('--data-folder', type=str, default='./Data-Nonzero/', metavar='str',
+parser.add_argument('--data-folder', type=str,
+                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
+                    metavar='str',
                     help='folder that contains data (default: test dataset)')
+parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
+                    help='Identifier to save npy arrays with')
+parser.add_argument('--load', type=str,
+                    default='/mnt/960EVO/workspace/UNet-Zoo/bdclstm-8-1-0.001',
+                    metavar='str',
+                    help='weight file to load (default: None)')
 
 
 args = parser.parse_args()
@@ -82,8 +92,9 @@ criterion = DICELossMultiClass()
 # Define Training Loop
 
 
-def train(epoch):
+def train(epoch, loss_list):
     model.train()
+    print(enumerate(train_loader))
     for batch_idx, (image1, image2, image3, mask) in enumerate(train_loader):
         if args.cuda:
             image1, image2, image3, mask = image1.cuda(), \
@@ -104,6 +115,7 @@ def train(epoch):
 
         output = model(map1, map2, map3)
         loss = criterion(output, mask)
+        loss_list.append(loss.data[0])
 
         loss.backward()
         optimizer.step()
@@ -113,7 +125,7 @@ def train(epoch):
                 100. * batch_idx / len(train_loader), loss.data[0]))
 
 
-def test(train_accuracy=False):
+def test(train_accuracy=False, save_output=False):
     test_loss = 0
 
     if train_accuracy == True:
@@ -121,7 +133,7 @@ def test(train_accuracy=False):
     else:
         loader = test_loader
 
-    for (image1, image2, image3, mask) in loader:
+    for batch_idx, (image1, image2, image3, mask) in tqdm(enumerate(loader)):
         if args.cuda:
             image1, image2, image3, mask = image1.cuda(), \
                 image2.cuda(), \
@@ -140,6 +152,34 @@ def test(train_accuracy=False):
         # print(map1.type)
 
         output = model(map1, map2, map3)
+
+        maxes, out = torch.max(output, 1, keepdim=True)
+
+        if save_output and (not train_accuracy):
+            np.save('npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
+                                                                        batch_idx),
+                    out.data.byte().cpu().numpy())
+            np.save('npy-files/out-files/{}-batch-{}-masks.npy'.format(args.save,
+                                                                         batch_idx),
+                    mask.data.byte().cpu().numpy())
+            np.save('npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
+                                                                          batch_idx),
+                    image2.data.float().cpu().numpy())
+            pass
+
+        if save_output and train_accuracy:
+            np.save('npy-files/out-files/{}-train-batch-{}-outs.npy'.format(args.save,
+                                                                              batch_idx),
+                    out.data.byte().cpu().numpy())
+            np.save('npy-files/out-files/{}-train-batch-{}-masks.npy'.format(args.save,
+                                                                               batch_idx),
+                    mask.data.byte().cpu().numpy())
+            np.save('npy-files/out-files/{}-train-batch-{}-images.npy'.format(args.save,
+                                                                                batch_idx),
+                    image2.data.float().cpu().numpy())
+            pass
+
+
         test_loss += criterion(output, mask).data[0]
 
     test_loss /= len(loader)
@@ -152,9 +192,25 @@ def test(train_accuracy=False):
 
 
 if args.train:
+    loss_list = []
     for i in range(args.epochs):
-        train(i)
+        train(i, loss_list)
         test()
+
+    plt.plot(loss_list)
+    plt.title("bdclstm bs={}, ep={}, lr={}".format(args.batch_size,
+                                                   args.epochs, args.lr))
+    plt.xlabel('Number of iterations')
+    plt.ylabel('Average DICE loss per batch')
+    plt.savefig('plots/{}-bdclstm_bs={}_ep={}_lr={}.png'.format(args.save,
+                                                                args.batch_size,
+                                                                args.epochs,
+                                                                args.lr))
+
+    np.save('npy-files/loss-files/{}-bdclstm_bs={}_ep={}_lr={}.npy'.format(args.save,
+                                                                            args.batch_size,
+                                                                            args.epochs,
+                                                                            args.lr), np.asarray(loss_list))
 
     torch.save(model.state_dict(),
                'bdclstm-{}-{}-{}'.format(args.batch_size, args.epochs, args.lr))
@@ -162,5 +218,5 @@ else:
     model.load_state_dict(torch.load('bdclstm-{}-{}-{}'.format(args.batch_size,
                                                                args.epochs,
                                                                args.lr)))
-    test()
+    test(save_output=True)
     test(train_accuracy=True)

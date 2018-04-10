@@ -21,23 +21,8 @@ import numpy as np
 
 DATA_FOLDER = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/'
 
-dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
+dset_train = BraTSDatasetLSTM(DATA_FOLDER, train=True,
                               keywords=['t2'],
-                              im_size=[128, 128],
+                              im_size=[512, 512],
                               transform=tr.ToTensor())
-
-train_loader = DataLoader(dset_train,
-                          batch_size=64,
-                          shuffle=True,
-                          num_workers=1)
-
-print('Train Dataset : ', len(train_loader.dataset))
-
-model = UNet()
-
-model.cuda()
-
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.99)
-
-criterion = DICELossMultiClass()
 
