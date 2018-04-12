@@ -18,18 +18,18 @@ from tqdm import tqdm
 
 # %% import transforms
 
-UNET_MODEL_FILE = 'unetsmall-final-8-10-0.001'
+UNET_MODEL_FILE = 'unet-final-1-30-0.001'
 MODALITY = ["t2"]
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=8, metavar='N',
+parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=8, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=1, metavar='N',
+parser.add_argument('--epochs', type=int, default=2, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -41,7 +41,7 @@ parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
 parser.add_argument('--test-dataset', action='store_true', default=False,
                     help='test on smaller dataset (default: False)')
-parser.add_argument('--size', type=int, default=128, metavar='N',
+parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
 parser.add_argument('--drop', action='store_true', default=False,
                     help='enables drop')
@@ -77,7 +77,7 @@ train_loader = DataLoader(
 
 
 # %% Loading in the models
-unet = UNetSmall()
+unet = UNet()#UNetSmall()
 unet.load_state_dict(torch.load(UNET_MODEL_FILE))
 model = BDCLSTM(input_channels=32, hidden_channels=[32])
 

@@ -18,7 +18,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torchvision.transforms as tr
 
-from data import BraTSDatasetUnet, BraTSDatasetLSTM
+from data import BraTSDatasetUnet, BraTSDatasetLSTM, UnetPred
 from losses import DICELoss
 from models import UNetSmall
 from tqdm import tqdm
@@ -29,9 +29,9 @@ import numpy as np
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=8, metavar='N',
+parser.add_argument('--batch-size', type=int, default=5, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=5, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
@@ -43,17 +43,17 @@ parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--size', type=int, default=128, metavar='N',
+parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str, default=None, metavar='str',
                     help='weight file to load (default: None)')
 parser.add_argument('--data-folder', type=str,
-                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
+                    default='/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/',
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
-parser.add_argument('--modality', type=str, default='t2', metavar='str',
+parser.add_argument('--modality', type=str, default='base', metavar='str',
                     help='Modality to use for training (default: flair)')
 parser.add_argument('--optimizer', type=str, default='ADAM', metavar='str',
                     help='Optimizer (default: SGD)')
@@ -81,9 +81,16 @@ test_loader = DataLoader(dset_test,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
 
+dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
+                     im_size=[args.size, args.size], transform=tr.ToTensor())
+
+pred_loader = DataLoader(dset_pred,
+                         batch_size=args.test_batch_size,
+                         shuffle=False, num_workers=1)
 
 print("Training Data : ", len(train_loader.dataset))
 print("Testing Data : ", len(test_loader.dataset))
+print("Prediction Data : ", len(pred_loader.dataset))
 
 # %% Loading in the model
 model = UNetSmall()
@@ -157,10 +164,10 @@ def test(train_accuracy=False, save_output=False):
             np.save('./npy-files/out-files/{}-unetsmall-batch-{}-outs.npy'.format(args.save,
                                                                                   batch_idx),
                     output.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-unetsmall--batch-{}-masks.npy'.format(args.save,
+            np.save('./npy-files/out-files/{}-unetsmall-batch-{}-masks.npy'.format(args.save,
                                                                                     batch_idx),
                     mask.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-unetsmall--batch-{}-images.npy'.format(args.save,
+            np.save('./npy-files/out-files/{}-unetsmall-batch-{}-images.npy'.format(args.save,
                                                                                      batch_idx),
                     image.data.float().cpu().numpy())
 
@@ -183,6 +190,26 @@ def test(train_accuracy=False, save_output=False):
     else:
         print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(
             test_loss))
+
+def predict():
+    loader = pred_loader
+
+    for batch_idx, image in tqdm(enumerate(loader)):
+        if args.cuda:
+            image = image.cuda()
+
+        image= Variable(image, volatile=True)
+
+        output = model(image)
+
+        output.data.round_()
+
+        np.save('./npy-files/out-files/{}-unetsmall-batch-{}-outs.npy'.format(args.save,
+                                                                              batch_idx),
+                output.data.byte().cpu().numpy())
+        np.save('./npy-files/out-files/{}-unetsmall-batch-{}-images.npy'.format(args.save,
+                                                                                 batch_idx),
+                image.data.float().cpu().numpy())
 
 
 if args.train:
@@ -213,5 +240,6 @@ if args.train:
                                                                      args.lr))
 else:
     model.load_state_dict(torch.load(args.load))
-    test(save_output=True)
-    test(train_accuracy=True)
+    # test(save_output=False)
+    # test(train_accuracy=True)
+    predict()

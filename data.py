@@ -10,6 +10,75 @@ from dataParser import getMaskFileName, getImg, get_truth_file
 from itertools import groupby
 import torchvision.transforms as tr
 
+# load prediction dataset
+class UnetPred(Dataset):
+    __file = []
+    __im = []
+    im_ht = 0
+    im_wd = 0
+    dataset_size = 0
+
+    def __init__(self, dataset_folder, keywords=["P1", "1", "flair"], im_size=[128, 128], transform=None):
+
+        self.__file = []
+        self.__im = []
+        self.im_ht = im_size[0]
+        self.im_wd = im_size[1]
+        self.transform = transform
+
+        folder = dataset_folder + "segdataforpred_out/"
+
+        file_list = os.listdir(folder)
+        for file in file_list:
+            if file.endswith(".png"):
+                filename = os.path.splitext(file)[0]
+                filename_fragments = filename.split("_")
+                samekeywords = list(set(filename_fragments) & set(keywords))
+                if len(samekeywords) == len(keywords):
+                    # 1. read file name
+                    self.__file.append(filename)
+                    # 2. read raw image
+                    # TODO: I think we should open image only in getitem,
+                    # otherwise memory explodes
+
+                    # rawImage = getImg(folder + file)
+                    self.__im.append(os.path.join(folder, file))
+                    # print(self.__im[-1])
+                    # 3. read mask image
+                    # mask_file = getMaskFileName(file)
+                    # mask_file = get_truth_file(file, keywords[0])
+                    # print(mask_file)
+                    # maskImage = getImg(folder + mask_file)
+                    # self.__mask.append(folder + mask_file)
+        # self.dataset_size = len(self.__file)
+
+        # print("lengths : ", len(self.__im), len(self.__mask))
+        self.dataset_size = len(self.__file)
+
+        sio.savemat('filelist2.mat', {'data': self.__im})
+
+    def __getitem__(self, index):
+
+        img = getImg(self.__im[index])
+        # mask = getImg(self.__mask[index])
+
+        img = img.resize((self.im_ht, self.im_wd))
+        # mask = mask.resize((self.im_ht, self.im_wd))
+        # mask.show()
+
+        if self.transform is not None:
+            # TODO: Not sure why not take full image
+            img_tr = self.transform(img)
+            # mask_tr = self.transform(mask)
+            # img_tr = self.transform(img[None, :, :])
+            # mask_tr = self.transform(mask[None, :, :])
+
+        return img_tr
+        # return img.float(), mask.float()
+
+    def __len__(self):
+
+        return len(self.__im)
 
 class BraTSDatasetUnet(Dataset):
     __file = []
@@ -31,9 +100,9 @@ class BraTSDatasetUnet(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "Train_512_without_blank_png/"
+            folder = dataset_folder + "seg_label_1_train/"
         else:
-            folder = dataset_folder + "Test_512_without_blank_png/"
+            folder = dataset_folder + "seg_label_1_test/"
 
         file_list = os.listdir(folder)
         for file in file_list:

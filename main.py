@@ -30,7 +30,7 @@ import numpy as np
 # %% Training settings
 parser = argparse.ArgumentParser(
     description='UNet + BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=3, metavar='N',
+parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
                     help='input batch size for testing (default: 1000)')
