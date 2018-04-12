@@ -25,6 +25,8 @@ from tqdm import tqdm
 import scipy.io as sio
 import numpy as np
 
+from plot_ims import plot_pred
+
 # %% import transforms
 
 # %% Training settings
@@ -194,7 +196,10 @@ def test(train_accuracy=False, save_output=False):
 def predict():
     loader = pred_loader
 
+    file_names = dset_pred.get_file()
+
     for batch_idx, image in tqdm(enumerate(loader)):
+
         if args.cuda:
             image = image.cuda()
 
@@ -210,6 +215,8 @@ def predict():
         np.save('./npy-files/out-files/{}-unetsmall-batch-{}-images.npy'.format(args.save,
                                                                                  batch_idx),
                 image.data.float().cpu().numpy())
+
+    plot_pred(file_names)
 
 
 if args.train:

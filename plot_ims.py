@@ -99,7 +99,7 @@ def plot_test():
         mng.window.showMaximized()
         plt.show()
 
-def plot_pred():
+def plot_pred(file_names):
     save_dir = '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/pred'
     final_outs = []
     final_images = []
@@ -156,6 +156,7 @@ def plot_pred():
         ax.imshow(ax_params[curr_pos][1], cmap=cm.autumn, alpha=0.2)
         fig.canvas.draw()
 
+    count = 0
     for i in range(f_count):
         batches = final_images[i].shape[0]
         print(batches)
@@ -169,7 +170,8 @@ def plot_pred():
             image_data = plt1
             segment_data = np.ma.masked_where(plt3 < 0.9, plt3)
 
-            ax_params.append([image_data, segment_data])
+            ax_params.append((image_data, segment_data, file_names[count]))
+            count += 1
 
         fig = plt.figure()
         fig.canvas.mpl_connect('key_press_event', key_event)
@@ -177,8 +179,8 @@ def plot_pred():
         ax.imshow(ax_params[0][0], cmap=cm.gray)
         ax.imshow(ax_params[0][1], cmap=cm.autumn, alpha=0.2)
         # max window
-        mng = plt.get_current_fig_manager()
-        mng.window.showMaximized()
+        #mng = plt.get_current_fig_manager()
+        #mng.window.showMaximized()
         # plt.show()
 
         for idx, ax_param in enumerate(ax_params):
@@ -186,7 +188,9 @@ def plot_pred():
             ax.imshow(ax_param[0], cmap=cm.gray)
             ax.imshow(ax_param[1], cmap=cm.autumn, alpha=0.2)
             fig.canvas.draw()
-            plt.savefig(os.path.join(save_dir, str(i)+'_'+str(idx)+'.png'))
+            plt.title(ax_param[2])
+            plt.savefig(os.path.join(save_dir, ax_param[2]+'.png'))
+    print(count)
 
 # print(final_outs.shape)
 # print(final_masks.shape)

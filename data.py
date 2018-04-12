@@ -80,6 +80,9 @@ class UnetPred(Dataset):
 
         return len(self.__im)
 
+    def get_file(self):
+        return self.__file
+
 class BraTSDatasetUnet(Dataset):
     __file = []
     __im = []
