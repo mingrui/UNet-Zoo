@@ -31,9 +31,9 @@ from plot_ims import plot_pred
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=5, metavar='N',
+parser.add_argument('--batch-size', type=int, default=6, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=5, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
@@ -50,12 +50,12 @@ parser.add_argument('--size', type=int, default=512, metavar='N',
 parser.add_argument('--load', type=str, default=None, metavar='str',
                     help='weight file to load (default: None)')
 parser.add_argument('--data-folder', type=str,
-                    default='/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/',
+                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
-parser.add_argument('--modality', type=str, default='base', metavar='str',
+parser.add_argument('--modality', type=str, default='t2', metavar='str',
                     help='Modality to use for training (default: flair)')
 parser.add_argument('--optimizer', type=str, default='ADAM', metavar='str',
                     help='Optimizer (default: SGD)')

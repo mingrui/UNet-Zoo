@@ -26,7 +26,7 @@ class UnetPred(Dataset):
         self.im_wd = im_size[1]
         self.transform = transform
 
-        folder = dataset_folder + "segdataforpred_out/"
+        folder = dataset_folder + "Test_512_without_blank_png/"
 
         file_list = os.listdir(folder)
         for file in file_list:
@@ -83,6 +83,103 @@ class UnetPred(Dataset):
     def get_file(self):
         return self.__file
 
+class LstmPred(Dataset):
+    __file = []
+    __im = []
+    __im1 = []
+    __im3 = []
+    im_ht = 0
+    im_wd = 0
+    dataset_size = 0
+
+    def __init__(self, dataset_folder, keywords=["P1", "1", "flair"], im_size=[128, 128], transform=None):
+
+        self.__file = []
+        self.__im = []
+        self.im_ht = im_size[0]
+        self.im_wd = im_size[1]
+        self.transform = transform
+
+        folder = dataset_folder + "Test_512_without_blank_png/"
+
+        png_list = []
+        for file in os.listdir(folder):
+            if file.endswith('.png'):
+                png_list.append(file)
+
+        png_list.sort()
+
+        # this is a weird lambda function, because of weird naming convention
+        def groupby_lambda(x):
+            if 'valid' in x:
+                return x.split('_')[0] + x.split('_')[1] + x.split('_')[2]
+            else:
+                return x.split('_')[0] + x.split('_')[1]
+
+        unique_list = [list(g) for _, g in groupby(png_list, lambda x: groupby_lambda(x))]
+        # print(len(unique_list))
+        def numeric_sort_lambda(x):
+            x = x.split('.')[0]
+            if 'valid' in x:
+                return int(x.split('_')[4])
+            else:
+                return int(x.split('_')[3])
+
+        ready_file_list = []
+        for unique in unique_list:
+            unique = [unique[:int(len(unique)/2)], unique[int(len(unique)/2):]]
+            for u in unique:
+                u.sort(key=numeric_sort_lambda)
+            if len(unique) != 2:
+                print(unique)
+            ready_file_list.append(unique)
+
+        for r in ready_file_list:
+            # print(r[0])
+            for idx, file in enumerate(r[0][1:-1]):
+                self.__im.append(os.path.join(folder, file))
+                self.__file.append(file)
+
+                file1 = ''
+                file_frags = file.split('.')[0].split('_')
+                if 'valid' in file:
+                    file1 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + file_frags[3] + '_' + str(int(r[0][idx-1].split('.')[0].split('_')[4])) + '.png'
+                else:
+                    file1 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + str(int(r[0][idx-1].split('.')[0].split('_')[3])) + '.png'
+                # print(file1)
+                self.__im1.append(os.path.join(folder, file1))
+
+                file3 = ''
+                if 'valid' in file:
+                    file3 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + file_frags[3] + '_' + str(int(r[0][idx+1].split('.')[0].split('_')[4])) + '.png'
+                else:
+                    file3 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + str(int(r[0][idx+1].split('.')[0].split('_')[3])) + '.png'
+                # print(file3)
+                self.__im3.append(os.path.join(folder, file3))
+
+        self.dataset_size = len(self.__file)
+
+    def __getitem__(self, index):
+
+        img1 = getImg(self.__im1[index])
+        img = getImg(self.__im[index])
+        img3 = getImg(self.__im3[index])
+
+        if self.transform is not None:
+            img_tr1 = self.transform(img1)
+            img_tr = self.transform(img)
+            img_tr3 = self.transform(img3)
+
+        return img_tr1, img_tr, img_tr3
+
+    def __len__(self):
+
+        return len(self.__im)
+
+    def get_file(self):
+        return self.__file
+
+
 class BraTSDatasetUnet(Dataset):
     __file = []
     __im = []
@@ -103,9 +200,9 @@ class BraTSDatasetUnet(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "seg_label_1_train/"
+            folder = dataset_folder + "Train_512_without_blank_png/"
         else:
-            folder = dataset_folder + "seg_label_1_test/"
+            folder = dataset_folder + "Test_512_without_blank_png/"
 
         file_list = os.listdir(folder)
         for file in file_list:
@@ -181,9 +278,9 @@ class BraTSDatasetLSTM(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "Train_128_without_blank_png/"
+            folder = dataset_folder + "Train_512_without_blank_png/"
         else:
-            folder = dataset_folder + "Test_128_without_blank_png/"
+            folder = dataset_folder + "Test_512_without_blank_png/"
 
         # print("files : ", os.listdir(folder))
         # print("Folder : ", folder)

@@ -1,4 +1,5 @@
 import os
+import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -14,11 +15,13 @@ def plot_test():
     final_masks = []
     final_images = []
 
-    loss = np.load('npy-files/loss-files/OutMasks-UNetSmall_Loss_bs=5_ep=10_lr=0.001.npy')
-    base_name = 'OutMasks-unetsmall'
+    loss = np.load('npy-files/loss-files/OutMasks-bdclstm_bs=1_ep=5_lr=0.001.npy')
+    base_name = 'OutMasks'
 
     out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
-    f_lst = os.listdir(out_folder)
+    f_lst = glob.glob(out_folder+base_name+'-batch*')
+    f_lst.sort()
+    print(f_lst)
     f_count = int(len(f_lst)/3)
 
     print('file count : ', f_count)
@@ -100,16 +103,17 @@ def plot_test():
         plt.show()
 
 def plot_pred(file_names):
-    save_dir = '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/pred'
+    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
     final_outs = []
     final_images = []
 
-    loss = np.load('npy-files/loss-files/OutMasks-UNetSmall_Loss_bs=5_ep=10_lr=0.001.npy')
-    base_name = 'OutMasks-unetsmall'
+    loss = np.load('npy-files/loss-files/OutMasks-bdclstm_bs=1_ep=5_lr=0.001.npy')
+    base_name = 'OutMasks'
 
     out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
-    f_lst = os.listdir(out_folder)
-    f_count = int(len(f_lst)/2)
+    f_lst = glob.glob(out_folder + base_name + '-batch*')
+    f_lst.sort()
+    f_count = int(len(f_lst)/3)
 
     print('file count : ', f_count)
 
@@ -221,5 +225,5 @@ def plot_pred(file_names):
 #     plt.show()
 
 if __name__ == '__main__':
-    # plot_test()
-    plot_pred()
+    plot_test()
+    #plot_pred()

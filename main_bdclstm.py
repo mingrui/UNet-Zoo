@@ -10,26 +10,28 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torchvision.transforms as tr
 
-from data import BraTSDatasetLSTM
+from data import BraTSDatasetLSTM, LstmPred
 from CLSTM import BDCLSTM
 from models import *
 import numpy as np
 from tqdm import tqdm
 
+from plot_ims import plot_pred
+
 # %% import transforms
 
-UNET_MODEL_FILE = 'unet-final-1-30-0.001'
+UNET_MODEL_FILE = 'unetsmall-final-6-10-0.001'
 MODALITY = ["t2"]
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
 parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=4, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=2, metavar='N',
+parser.add_argument('--epochs', type=int, default=5, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -64,20 +66,28 @@ if args.cuda:
 
 DATA_FOLDER = args.data_folder
 
-# %% Loading in the Dataset
-dset_test = BraTSDatasetLSTM(
-    DATA_FOLDER, keywords=MODALITY, transform=tr.ToTensor())
-test_loader = DataLoader(
-    dset_test, batch_size=args.test_batch_size, shuffle=False, num_workers=1)
-
 dset_train = BraTSDatasetLSTM(
-    DATA_FOLDER, keywords=MODALITY, transform=tr.ToTensor())
+    DATA_FOLDER, train=True, keywords=MODALITY, transform=tr.ToTensor())
 train_loader = DataLoader(
     dset_train, batch_size=args.batch_size, shuffle=True, num_workers=1)
 
+dset_test = BraTSDatasetLSTM(
+    DATA_FOLDER, train=False, keywords=MODALITY, transform=tr.ToTensor())
+test_loader = DataLoader(
+    dset_test, batch_size=args.test_batch_size, shuffle=False, num_workers=1)
+
+dset_pred = LstmPred(DATA_FOLDER, keywords=MODALITY,
+                     im_size=[args.size, args.size], transform=tr.ToTensor())
+pred_loader = DataLoader(dset_pred,
+                         batch_size=args.test_batch_size,
+                         shuffle=False, num_workers=1)
+
+print("Training Data : ", len(train_loader.dataset))
+print("Testing Data : ", len(test_loader.dataset))
+print("Prediction Data : ", len(pred_loader.dataset))
 
 # %% Loading in the models
-unet = UNet()#UNetSmall()
+unet = UNetSmall()
 unet.load_state_dict(torch.load(UNET_MODEL_FILE))
 model = BDCLSTM(input_channels=32, hidden_channels=[32])
 
@@ -190,6 +200,36 @@ def test(train_accuracy=False, save_output=False):
         print(
             '\nTest Set: Average Dice Coefficient: {:.4f}\n'.format(test_loss))
 
+def predict():
+    loader = pred_loader
+
+    file_names = dset_pred.get_file()
+
+    for batch_idx, (image1, image2, image3) in tqdm(enumerate(loader)):
+        if args.cuda:
+            image1, image2, image3 = image1.cuda(), \
+                                           image2.cuda(), \
+                                           image3.cuda()
+        image1, image2, image3 = Variable(image1, volatile=True), \
+                                       Variable(image2, volatile=True), \
+                                       Variable(image3, volatile=True)
+        map1 = unet(image1, return_features=True)
+        map2 = unet(image2, return_features=True)
+        map3 = unet(image3, return_features=True)
+
+        output = model(map1, map2, map3)
+
+        maxes, out = torch.max(output, 1, keepdim=True)
+
+        np.save('npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
+                                                                  batch_idx),
+                out.data.byte().cpu().numpy())
+        np.save('npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
+                                                                    batch_idx),
+                image2.data.float().cpu().numpy())
+
+    plot_pred(file_names)
+
 
 if args.train:
     loss_list = []
@@ -218,5 +258,6 @@ else:
     model.load_state_dict(torch.load('bdclstm-{}-{}-{}'.format(args.batch_size,
                                                                args.epochs,
                                                                args.lr)))
-    test(save_output=True)
-    test(train_accuracy=True)
+    #test(save_output=True)
+    #test(train_accuracy=True)
+    predict()
