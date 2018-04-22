@@ -201,34 +201,38 @@ def test(train_accuracy=False, save_output=False):
             '\nTest Set: Average Dice Coefficient: {:.4f}\n'.format(test_loss))
 
 def predict():
-    loader = pred_loader
+    # loader = pred_loader
 
     file_names = dset_pred.get_file()
 
-    for batch_idx, (image1, image2, image3) in tqdm(enumerate(loader)):
-        if args.cuda:
-            image1, image2, image3 = image1.cuda(), \
-                                           image2.cuda(), \
-                                           image3.cuda()
-        image1, image2, image3 = Variable(image1, volatile=True), \
-                                       Variable(image2, volatile=True), \
-                                       Variable(image3, volatile=True)
-        map1 = unet(image1, return_features=True)
-        map2 = unet(image2, return_features=True)
-        map3 = unet(image3, return_features=True)
+    # for batch_idx, (image1, image2, image3) in tqdm(enumerate(loader)):
+    #     if args.cuda:
+    #         image1, image2, image3 = image1.cuda(), \
+    #                                        image2.cuda(), \
+    #                                        image3.cuda()
+    #     image1, image2, image3 = Variable(image1, volatile=True), \
+    #                                    Variable(image2, volatile=True), \
+    #                                    Variable(image3, volatile=True)
+    #     map1 = unet(image1, return_features=True)
+    #     map2 = unet(image2, return_features=True)
+    #     map3 = unet(image3, return_features=True)
+    #
+    #     output = model(map1, map2, map3)
+    #
+    #     maxes, out = torch.max(output, 1, keepdim=True)
+    #
+    #     np.save('npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
+    #                                                               batch_idx),
+    #             out.data.byte().cpu().numpy())
+    #     np.save('npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
+    #                                                                 batch_idx),
+    #             image2.data.float().cpu().numpy())
 
-        output = model(map1, map2, map3)
-
-        maxes, out = torch.max(output, 1, keepdim=True)
-
-        np.save('npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
-                                                                  batch_idx),
-                out.data.byte().cpu().numpy())
-        np.save('npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
-                                                                    batch_idx),
-                image2.data.float().cpu().numpy())
-
-    plot_pred(file_names)
+    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
+    loss_file = 'npy-files/loss-files/OutMasks-bdclstm_bs=1_ep=5_lr=0.001.npy'
+    base_name = 'OutMasks'
+    out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
+    plot_pred(file_names, save_dir, loss_file, base_name, out_folder)
 
 
 if args.train:
