@@ -21,7 +21,7 @@ def plot_test():
     out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
     f_lst = glob.glob(out_folder+base_name+'-batch*')
     f_lst.sort()
-    print(f_lst)
+    # print(f_lst)
     f_count = int(len(f_lst)/3)
 
     print('file count : ', f_count)

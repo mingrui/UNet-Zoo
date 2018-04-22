@@ -26,7 +26,7 @@ class UnetPred(Dataset):
         self.im_wd = im_size[1]
         self.transform = transform
 
-        folder = dataset_folder + "Test_512_without_blank_png/"
+        folder = dataset_folder + "Test_512_with_blank_png/"
 
         file_list = os.listdir(folder)
         for file in file_list:
@@ -100,7 +100,7 @@ class LstmPred(Dataset):
         self.im_wd = im_size[1]
         self.transform = transform
 
-        folder = dataset_folder + "Test_512_without_blank_png/"
+        folder = dataset_folder + "Test_512_with_blank_png/"
 
         png_list = []
         for file in os.listdir(folder):
@@ -200,9 +200,9 @@ class BraTSDatasetUnet(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "Train_512_without_blank_png/"
+            folder = dataset_folder + "Train_512_with_blank_png/"
         else:
-            folder = dataset_folder + "Test_512_without_blank_png/"
+            folder = dataset_folder + "Test_512_with_blank_png/"
 
         file_list = os.listdir(folder)
         for file in file_list:
@@ -278,9 +278,9 @@ class BraTSDatasetLSTM(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "Train_512_without_blank_png/"
+            folder = dataset_folder + "Train_512_with_blank_png/"
         else:
-            folder = dataset_folder + "Test_512_without_blank_png/"
+            folder = dataset_folder + "Test_512_with_blank_png/"
 
         # print("files : ", os.listdir(folder))
         # print("Folder : ", folder)
