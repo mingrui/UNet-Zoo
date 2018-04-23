@@ -19,11 +19,13 @@ from torch.utils.data import DataLoader
 import scipy.io as sio
 import torchvision.transforms as tr
 
-from data import BraTSDatasetUnet, BraTSDatasetLSTM
+from data import BraTSDatasetUnet, BraTSDatasetLSTM, UnetPred
 from losses import DICELossMultiClass
 from models import UNet
 from tqdm import tqdm
 import numpy as np
+
+from plot_ims import plot_pred
 
 # %% import transforms
 
@@ -47,19 +49,22 @@ parser.add_argument('--log-interval', type=int, default=1, metavar='N',
 parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str,
-                    default='/mnt/960EVO/workspace/UNet-Zoo/unet-final-16-10-0.001',
+                    default=None,
                     metavar='str',
                     help='weight file to load (default: None)')
+# unet-final-3-20-0.001
 parser.add_argument('--data-folder', type=str,
-                    default='/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/',
+                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
-parser.add_argument('--modality', type=str, default='base', metavar='str',
+parser.add_argument('--modality', type=str, default='t2', metavar='str',
                     help='Modality to use for training (default: flair)')
 parser.add_argument('--optimizer', type=str, default='SGD', metavar='str',
                     help='Optimizer (default: SGD)')
+parser.add_argument('--pred', action='store_true', default=False,
+                    help='Argument to make prediction (default: False)')
 
 args = parser.parse_args()
 args.cuda = args.cuda and torch.cuda.is_available()
@@ -85,9 +90,18 @@ test_loader = DataLoader(dset_test,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
 
+dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
+                     im_size=[args.size, args.size], transform=tr.ToTensor())
 
+pred_loader = DataLoader(dset_pred,
+                         batch_size=args.test_batch_size,
+                         shuffle=False, num_workers=1)
+
+print("Data folder: ", DATA_FOLDER)
+print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
 print("Test Data :", len(test_loader.dataset))
+print("Prediction Data : ", len(pred_loader.dataset))
 
 # %% Loading in the model
 model = UNet()
@@ -154,13 +168,13 @@ def test(train_accuracy=False, save_output=False):
 
         if save_output and (not train_accuracy):
             np.save('npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
-                                                                        batch_idx),
+                                                                      batch_idx),
                     out.data.byte().cpu().numpy())
             np.save('npy-files/out-files/{}-batch-{}-masks.npy'.format(args.save,
-                                                                         batch_idx),
+                                                                       batch_idx),
                     mask.data.byte().cpu().numpy())
             np.save('npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
-                                                                          batch_idx),
+                                                                        batch_idx),
                     image.data.float().cpu().numpy())
 
         if save_output and train_accuracy:
@@ -185,6 +199,14 @@ def test(train_accuracy=False, save_output=False):
         print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(
             test_loss))
 
+def predict():
+    file_names = dset_pred.get_file()
+    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
+    loss_file = 'npy-files/loss-files/OutMasks-UNet_Loss_bs=3_ep=20_lr=0.001.npy'
+    base_name = 'OutMasks'
+    out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
+
+    plot_pred(file_names, save_dir, loss_file, base_name, out_folder)
 
 if args.train:
     loss_list = []
@@ -211,7 +233,14 @@ if args.train:
     torch.save(model.state_dict(), 'unet-final-{}-{}-{}'.format(args.batch_size,
                                                                 args.epochs,
                                                                 args.lr))
+
+elif args.pred:
+    predict()
+
 elif args.load is not None:
     model.load_state_dict(torch.load(args.load))
     test(save_output=True)
     test(train_accuracy=True)
+
+
+

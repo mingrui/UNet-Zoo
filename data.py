@@ -36,7 +36,7 @@ class UnetPred(Dataset):
                 samekeywords = list(set(filename_fragments) & set(keywords))
                 if len(samekeywords) == len(keywords):
                     # 1. read file name
-                    self.__file.append(filename)
+                    self.__file.append(file)
                     # 2. read raw image
                     # TODO: I think we should open image only in getitem,
                     # otherwise memory explodes
@@ -100,7 +100,7 @@ class LstmPred(Dataset):
         self.im_wd = im_size[1]
         self.transform = transform
 
-        folder = dataset_folder + "Test_512_with_blank_png/"
+        folder = dataset_folder + "Test_512_without_blank_png/"
 
         png_list = []
         for file in os.listdir(folder):
@@ -278,9 +278,9 @@ class BraTSDatasetLSTM(Dataset):
         folder = dataset_folder
         # # Open and load text file including the whole training data
         if train:
-            folder = dataset_folder + "Train_512_with_blank_png/"
+            folder = dataset_folder + "Train_512_without_blank_png/"
         else:
-            folder = dataset_folder + "Test_512_with_blank_png/"
+            folder = dataset_folder + "Test_512_without_blank_png/"
 
         # print("files : ", os.listdir(folder))
         # print("Folder : ", folder)
