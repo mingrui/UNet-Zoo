@@ -79,3 +79,26 @@ class DICELoss(nn.Module):
 
         loss = 1 - torch.sum(dice_eso) / dice_eso.size(0)
         return loss
+
+class DICELoss3D(nn.Module):
+
+    def __init__(self):
+        super(DICELoss3D, self).__init__()
+
+    def forward(self, output, mask):
+
+        batch_size, channel, x, y, z = output.size()
+        total_loss = 0
+        for i in range(batch_size):
+            for j in range(z):
+                loss = 0
+                output_z = output[i:i + 1, :, :, :, j]
+                label_z = mask[i, :, :, :, j]
+
+                softmax_output_z = nn.Softmax2d()(output_z)
+                logsoftmax_output_z = torch.log(softmax_output_z)
+
+                loss = nn.NLLLoss2d()(logsoftmax_output_z, label_z)
+                total_loss += loss
+
+        return total_loss

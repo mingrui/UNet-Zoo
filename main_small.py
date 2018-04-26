@@ -25,19 +25,19 @@ from tqdm import tqdm
 import scipy.io as sio
 import numpy as np
 
-from plot_ims import plot_pred
+from plot_ims import plot_pred, plot_test
 
 # %% import transforms
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=6, metavar='N',
+parser.add_argument('--batch-size', type=int, default=24, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=48, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=30, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -45,12 +45,12 @@ parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--size', type=int, default=512, metavar='N',
+parser.add_argument('--size', type=int, default=256, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str, default=None, metavar='str',
                     help='weight file to load (default: None)')
 parser.add_argument('--data-folder', type=str,
-                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
+                    default='none',
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
@@ -89,7 +89,8 @@ dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
 pred_loader = DataLoader(dset_pred,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
-
+print("Data folder: ", DATA_FOLDER)
+print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
 print("Testing Data : ", len(test_loader.dataset))
 print("Prediction Data : ", len(pred_loader.dataset))
@@ -194,29 +195,37 @@ def test(train_accuracy=False, save_output=False):
             test_loss))
 
 def predict():
-    loader = pred_loader
+    has_test_set = False
+
+    if not has_test_set:
+        loader = pred_loader
+
+        file_names = dset_pred.get_file()
+
+        for batch_idx, image in tqdm(enumerate(loader)):
+
+            if args.cuda:
+                image = image.cuda()
+
+            image= Variable(image, volatile=True)
+
+            output = model(image)
+
+            output.data.round_()
+
+            np.save('./npy-files/out-files/{}-unetsmall-batch-{}-outs.npy'.format(args.save,
+                                                                                  batch_idx),
+                    output.data.byte().cpu().numpy())
+            np.save('./npy-files/out-files/{}-unetsmall-batch-{}-images.npy'.format(args.save,
+                                                                                     batch_idx),
+                    image.data.float().cpu().numpy())
 
     file_names = dset_pred.get_file()
+    save_dir = '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/pred'
+    base_name = 'OutMasks-unetsmall'
+    out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
 
-    for batch_idx, image in tqdm(enumerate(loader)):
-
-        if args.cuda:
-            image = image.cuda()
-
-        image= Variable(image, volatile=True)
-
-        output = model(image)
-
-        output.data.round_()
-
-        np.save('./npy-files/out-files/{}-unetsmall-batch-{}-outs.npy'.format(args.save,
-                                                                              batch_idx),
-                output.data.byte().cpu().numpy())
-        np.save('./npy-files/out-files/{}-unetsmall-batch-{}-images.npy'.format(args.save,
-                                                                                 batch_idx),
-                image.data.float().cpu().numpy())
-
-    plot_pred(file_names)
+    plot_pred(file_names, save_dir, base_name, out_folder, has_test_set)
 
 
 if args.train:
@@ -247,6 +256,6 @@ if args.train:
                                                                      args.lr))
 else:
     model.load_state_dict(torch.load(args.load))
-    # test(save_output=False)
+    # test(save_output=True)
     # test(train_accuracy=True)
     predict()

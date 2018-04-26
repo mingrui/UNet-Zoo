@@ -20,7 +20,7 @@ import scipy.io as sio
 import torchvision.transforms as tr
 
 from data import BraTSDatasetUnet, BraTSDatasetLSTM, UnetPred
-from losses import DICELossMultiClass
+from losses import DICELossMultiClass, DICELoss
 from models import UNet
 from tqdm import tqdm
 import numpy as np
@@ -32,9 +32,9 @@ from plot_ims import plot_pred
 # %% Training settings
 parser = argparse.ArgumentParser(
     description='UNet + BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=3, metavar='N',
+parser.add_argument('--batch-size', type=int, default=12, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=10, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=24, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
@@ -46,7 +46,7 @@ parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--size', type=int, default=512, metavar='N',
+parser.add_argument('--size', type=int, default=256, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str,
                     default=None,
@@ -54,7 +54,7 @@ parser.add_argument('--load', type=str,
                     help='weight file to load (default: None)')
 # unet-final-3-20-0.001
 parser.add_argument('--data-folder', type=str,
-                    default='/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/',
+                    default='/mnt/960EVO/datasets/brats/BRATS2017/png/',
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
@@ -119,7 +119,7 @@ if args.optimizer == 'ADAM':
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
 # Defining Loss Function
-criterion = DICELossMultiClass()
+criterion = DICELoss()
 
 def train(epoch, scheduler, loss_lsit):
     scheduler.step()
