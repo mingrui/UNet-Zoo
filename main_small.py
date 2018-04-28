@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as tr
 
 from data import BraTSDatasetUnet, BraTSDatasetLSTM, UnetPred
-from losses import DICELoss
+from losses import DICELoss, DICELossMultiClass
 from models import UNetSmall
 from tqdm import tqdm
 import scipy.io as sio
@@ -31,13 +31,13 @@ from plot_ims import plot_pred, plot_test
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=24, metavar='N',
+parser.add_argument('--batch-size', type=int, default=3, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=48, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=6, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=30, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -45,7 +45,7 @@ parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--size', type=int, default=256, metavar='N',
+parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str, default=None, metavar='str',
                     help='weight file to load (default: None)')
@@ -110,7 +110,7 @@ if args.optimizer == 'ADAM':
 
 
 # Defining Loss Function
-criterion = DICELoss()
+criterion = DICELossMultiClass()
 # Define Training Loop
 
 
@@ -200,8 +200,6 @@ def predict():
     if not has_test_set:
         loader = pred_loader
 
-        file_names = dset_pred.get_file()
-
         for batch_idx, image in tqdm(enumerate(loader)):
 
             if args.cuda:
@@ -221,7 +219,7 @@ def predict():
                     image.data.float().cpu().numpy())
 
     file_names = dset_pred.get_file()
-    save_dir = '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/pred'
+    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
     base_name = 'OutMasks-unetsmall'
     out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
 
@@ -233,7 +231,7 @@ if args.train:
     for i in tqdm(range(args.epochs)):
         train(i, loss_list)
         test(train_accuracy=False, save_output=False)
-        test(train_accuracy=True, save_output=False)
+        #test(train_accuracy=True, save_output=False)
 
     plt.plot(loss_list)
     plt.title("UNetSmall bs={}, ep={}, lr={}".format(args.batch_size,

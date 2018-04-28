@@ -3,7 +3,6 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from PIL import Image
 import math
 from mpl_toolkits.mplot3d import Axes3D
 import scipy.io as sio
@@ -106,7 +105,8 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
     final_images = []
     final_masks = []
 
-    f_lst = glob.glob(out_folder + base_name + '-batch*')
+    print(os.path.join(out_folder, base_name + '-batch*'))
+    f_lst = glob.glob(os.path.join(out_folder, base_name + '-batch*'))
     f_lst.sort()
     if has_test_set:
         num = 3
@@ -162,12 +162,6 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
             else:
                 ax_params.append((image_data, segment_data, file_names[count]))
 
-            x = file_names[count].split('.')[0].split('_')
-            key = '_'.join(x[:-2])
-            if key in merge_dict:
-                merge_dict[key].append(file_names[count])
-            else:
-                merge_dict[key] = [file_names[count]]
             count += 1
 
         for idx, ax_param in enumerate(ax_params):
@@ -180,51 +174,6 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
             ax.imshow(ax_param[0], cmap=cm.gray)
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
-            ax.imshow(ax_param[1], cmap=cm.autumn, alpha=0.2)
+            ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.2)
             plt.savefig(os.path.join(save_dir, ax_param[2]))
     print(count)
-
-    def numeric_sort_lambda(x):
-        x = x.split('.')[0]
-        if 'valid' in x:
-            return int(x.split('_')[4])
-        else:
-            return int(x.split('_')[3])
-
-    # merge photos
-    os.chdir(save_dir)
-    for key in merge_dict:
-        merge_dict[key].sort(key=numeric_sort_lambda)
-
-        sqrt = len(merge_dict[key]) ** (1/2.0)
-        x = math.ceil(sqrt)
-
-        merge_images(merge_dict[key], (x,x)).save(key+'.png')
-        print(key+'.png')
-
-        for image in  merge_dict[key]:
-            os.remove(image)
-
-def merge_images(img_list, dim):
-    img = img_list[0]
-    row_n = dim[0]
-    col_n = dim[1]
-
-    img = Image.open(img)
-    (w, h) = img.size
-
-    canvas_size = (w * row_n, h * col_n)
-    result = Image.new('RGB', canvas_size)
-
-    for idx, img in enumerate(img_list):
-        box = (w*int(idx%col_n), h*int(idx/row_n))
-        # print(img)
-        # print(box)
-        img = Image.open(img)
-        result.paste(im=img, box=box)
-
-    return result
-
-if __name__ == '__main__':
-    plot_test('OutMasks-unetsmall')
-    #plot_pred()

@@ -32,13 +32,13 @@ from plot_ims import plot_pred
 # %% Training settings
 parser = argparse.ArgumentParser(
     description='UNet + BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=12, metavar='N',
+parser.add_argument('--batch-size', type=int, default=1, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=24, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=1, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
+parser.add_argument('--epochs', type=int, default=40, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
@@ -46,7 +46,7 @@ parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
 parser.add_argument('--log-interval', type=int, default=1, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--size', type=int, default=256, metavar='N',
+parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
 parser.add_argument('--load', type=str,
                     default=None,
@@ -54,7 +54,7 @@ parser.add_argument('--load', type=str,
                     help='weight file to load (default: None)')
 # unet-final-3-20-0.001
 parser.add_argument('--data-folder', type=str,
-                    default='/mnt/960EVO/datasets/brats/BRATS2017/png/',
+                    default=None,
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
@@ -119,7 +119,7 @@ if args.optimizer == 'ADAM':
 exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
 # Defining Loss Function
-criterion = DICELoss()
+criterion = DICELossMultiClass()
 
 def train(epoch, scheduler, loss_lsit):
     scheduler.step()
@@ -199,14 +199,34 @@ def test(train_accuracy=False, save_output=False):
         print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(
             test_loss))
 
-def predict():
+def predict(make_batch=False):
+    if make_batch:
+        loader = pred_loader
+
+        for batch_idx, image in tqdm(enumerate(loader)):
+
+            if args.cuda:
+                image = image.cuda()
+
+            image= Variable(image, volatile=True)
+
+            output = model(image)
+
+            output.data.round_()
+
+            np.save('./npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
+                                                                                  batch_idx),
+                    output.data.byte().cpu().numpy())
+            np.save('./npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
+                                                                                     batch_idx),
+                    image.data.float().cpu().numpy())
+
     file_names = dset_pred.get_file()
     save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
-    loss_file = 'npy-files/loss-files/OutMasks-UNet_Loss_bs=3_ep=20_lr=0.001.npy'
     base_name = 'OutMasks'
     out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
 
-    plot_pred(file_names, save_dir, loss_file, base_name, out_folder)
+    plot_pred(file_names, save_dir, base_name, out_folder)
 
 if args.train:
     loss_list = []
@@ -234,13 +254,13 @@ if args.train:
                                                                 args.epochs,
                                                                 args.lr))
 
-elif args.pred:
-    predict()
+# elif args.pred:
+#     predict()
 
 elif args.load is not None:
     model.load_state_dict(torch.load(args.load))
-    test(save_output=True)
-    test(train_accuracy=True)
+    #test()
+    predict()
 
 
 

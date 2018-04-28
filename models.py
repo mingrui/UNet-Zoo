@@ -4,9 +4,10 @@ import torch
 
 
 class UNet(nn.Module):
-    def __init__(self, num_channels=1, num_classes=1):
+    def __init__(self, num_channels=1, num_classes=2):
         super(UNet, self).__init__()
         num_feat = [64, 128, 256, 512, 1024]
+        # num_feat = [128, 256, 512, 1024, 2048]
 
         self.down1 = nn.Sequential(Conv3x3(num_channels, num_feat[0]))
 
@@ -110,7 +111,7 @@ class UNetSmall(nn.Module):
                                      nn.BatchNorm2d(num_feat[0]))
 
         self.final = nn.Sequential(nn.Conv2d(num_feat[0],
-                                             1,
+                                             num_classes,
                                              kernel_size=1),
                                    nn.Sigmoid())
 

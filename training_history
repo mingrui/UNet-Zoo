@@ -1,0 +1,5 @@
+python main_small.py --train --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' --epoch 10
+Test Set: Average DICE Coefficient: 0.2366)
+num_feat = [64, 128, 256, 512]
+
+
