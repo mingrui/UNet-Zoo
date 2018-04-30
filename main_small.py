@@ -10,6 +10,7 @@ import argparse
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import os
 
 import torch
 import torch.nn as nn
@@ -61,10 +62,21 @@ parser.add_argument('--optimizer', type=str, default='ADAM', metavar='str',
                     help='Optimizer (default: SGD)')
 parser.add_argument('--clip', action='store_true', default=False,
                     help='enables gradnorm clip of 1.0 (default: False)')
+parser.add_argument('--pred-input', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--pred-output', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--batch-out-folder', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+
+
 args = parser.parse_args()
 args.cuda = args.cuda and torch.cuda.is_available()
 
 DATA_FOLDER = args.data_folder
+PRED_INPUT = args.pred_input
+PRED_OUTPUT = args.pred_output
+BATCH_OUT_FOLDER = args.batch_out_folder
 
 # %% Loading in the Dataset
 dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
@@ -83,7 +95,7 @@ test_loader = DataLoader(dset_test,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
 
-dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
+dset_pred = UnetPred(DATA_FOLDER, PRED_INPUT, keywords=[args.modality],
                      im_size=[args.size, args.size], transform=tr.ToTensor())
 
 pred_loader = DataLoader(dset_pred,
@@ -211,17 +223,15 @@ def predict():
 
             output.data.round_()
 
-            np.save('./npy-files/out-files/{}-unetsmall-batch-{}-outs.npy'.format(args.save,
-                                                                                  batch_idx),
+            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
                     output.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-unetsmall-batch-{}-images.npy'.format(args.save,
-                                                                                     batch_idx),
+            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
                     image.data.float().cpu().numpy())
 
     file_names = dset_pred.get_file()
-    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
+    save_dir = PRED_OUTPUT
     base_name = 'OutMasks-unetsmall'
-    out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
+    out_folder = BATCH_OUT_FOLDER
 
     plot_pred(file_names, save_dir, base_name, out_folder, has_test_set)
 

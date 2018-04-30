@@ -3,3 +3,18 @@ Test Set: Average DICE Coefficient: 0.2366)
 num_feat = [64, 128, 256, 512]
 
 
+python main_small.py \
+ --train \
+ --epoch 20 \
+ --modality 'base' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/512' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_preprocess' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_pred_output'
+
+python main_small.py \
+ --modality 'base' \
+ --load 'unetsmall-final-3-20-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/512' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_preprocess' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_pred_output' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_batch_out'

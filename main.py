@@ -24,6 +24,7 @@ from losses import DICELossMultiClass, DICELoss
 from models import UNet
 from tqdm import tqdm
 import numpy as np
+import os
 
 from plot_ims import plot_pred
 
@@ -199,7 +200,13 @@ def test(train_accuracy=False, save_output=False):
         print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(
             test_loss))
 
-def predict(make_batch=False):
+def predict(make_batch=True):
+    file_names = dset_pred.get_file()
+    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/segmentation_prediction'
+    base_name = 'OutMasks'
+    outmask_folder = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/outmasks'
+
+    # if batch files has not been generated, make batch
     if make_batch:
         loader = pred_loader
 
@@ -214,19 +221,15 @@ def predict(make_batch=False):
 
             output.data.round_()
 
-            np.save('./npy-files/out-files/{}-batch-{}-outs.npy'.format(args.save,
-                                                                                  batch_idx),
+            np.save(os.path.join(outmask_folder, '{}-batch-{}-outs.npy'.format(args.save,
+                                                                                  batch_idx)),
                     output.data.byte().cpu().numpy())
-            np.save('./npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
-                                                                                     batch_idx),
+            np.save(os.path.join(outmask_folder, './npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
+                                                                                     batch_idx)),
                     image.data.float().cpu().numpy())
 
-    file_names = dset_pred.get_file()
-    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
-    base_name = 'OutMasks'
-    out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
-
-    plot_pred(file_names, save_dir, base_name, out_folder)
+    # plot
+    plot_pred(file_names, save_dir, base_name, outmask_folder)
 
 if args.train:
     loss_list = []

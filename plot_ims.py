@@ -100,13 +100,13 @@ def plot_test(base_name):
         mng.window.showMaximized()
         plt.show()
 
-def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False):
+def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, has_test_set = False):
     final_outs = []
     final_images = []
     final_masks = []
 
-    print(os.path.join(out_folder, base_name + '-batch*'))
-    f_lst = glob.glob(os.path.join(out_folder, base_name + '-batch*'))
+    print(os.path.join(outmask_dir, base_name + '-batch*'))
+    f_lst = glob.glob(os.path.join(outmask_dir, base_name + '-batch*'))
     f_lst.sort()
     if has_test_set:
         num = 3
@@ -118,12 +118,12 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
     # f_count = 8
     for i in range(f_count):
         outs = np.load(
-            'npy-files/out-files/'+base_name+'-batch-{}-outs.npy'.format(i))
+            os.path.join(outmask_dir, base_name+'-batch-{}-outs.npy'.format(i)))
         images = np.load(
-            'npy-files/out-files/'+base_name+'-batch-{}-images.npy'.format(i))
+            os.path.join(outmask_dir, base_name+'-batch-{}-images.npy'.format(i)))
         if has_test_set:
             masks = np.load(
-                'npy-files/out-files/' + base_name + '-batch-{}-masks.npy'.format(i))
+                os.path.join(outmask_dir,base_name + '-batch-{}-masks.npy'.format(i)))
 
         final_outs.append(outs)
         final_images.append(images)
@@ -154,6 +154,7 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
 
             image_data = plt1
             segment_data = np.ma.masked_where(plt3 < 0.9, plt3)
+
             if has_test_set:
                 masked_data = np.ma.masked_where(plt2 < 0.9, plt2)
 
@@ -161,6 +162,7 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
                 ax_params.append((image_data, segment_data, file_names[count], masked_data))
             else:
                 ax_params.append((image_data, segment_data, file_names[count]))
+                np.savetxt(os.path.join(segmentation_prediction_dir, file_names[count]+'.txt'), segment_data[1].astype(int), fmt='%i',delimiter=',')
 
             count += 1
 
@@ -175,5 +177,5 @@ def plot_pred(file_names, save_dir, base_name, out_folder, has_test_set = False)
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
             ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.2)
-            plt.savefig(os.path.join(save_dir, ax_param[2]))
+            plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
     print(count)
