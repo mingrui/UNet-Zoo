@@ -19,21 +19,21 @@ class DICELossMultiClass(nn.Module):
         num = torch.sum(num, 2)
         num = torch.sum(num, 1)
 
-        # print( num )
+        # print('num : ', num )
 
         den1 = probs * probs
-        # print(den1.size())
+        # print('den1 : ', den1.size())
         den1 = torch.sum(den1, 2)
         den1 = torch.sum(den1, 1)
 
-        # print(den1.size())
+        # print('den1 2 : ', den1.size())
 
         den2 = mask * mask
-        # print(den2.size())
+        # print('den2 : ', den2.size())
         den2 = torch.sum(den2, 2)
         den2 = torch.sum(den2, 1)
 
-        # print(den2.size())
+        # print('den2 2 : ', den2.size())
         eps = 0.0000001
         dice = 2 * ((num + eps) / (den1 + den2 + eps))
         # dice_eso = dice[:, 1:]

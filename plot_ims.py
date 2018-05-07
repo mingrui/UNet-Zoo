@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import scipy.io as sio
 # outs = np.load('Numpy-batch-7-outs.npy')
 # masks = np.load('Numpy-batch-7-masks.npy')
+from PIL import Image
 
 curr_pos = 0
 
@@ -100,7 +101,7 @@ def plot_test(base_name):
         mng.window.showMaximized()
         plt.show()
 
-def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, has_test_set = False):
+def plot_pred_backup(file_names, segmentation_prediction_dir, base_name, outmask_dir, has_test_set = False):
     final_outs = []
     final_images = []
     final_masks = []
@@ -177,5 +178,86 @@ def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, h
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
             ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.2)
+            plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
+    print(count)
+
+def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, has_test_set = False):
+    final_outs = []
+    final_images = []
+    final_masks = []
+
+    print(os.path.join(outmask_dir, base_name + '-batch*'))
+    f_lst = glob.glob(os.path.join(outmask_dir, base_name + '-batch*'))
+    f_lst.sort()
+    if has_test_set:
+        num = 3
+    else:
+        num = 2
+    f_count = int(len(f_lst)/num)
+
+    print('file count : ', f_count)
+    # f_count = 8
+    for i in range(f_count):
+        outs = np.load(
+            os.path.join(outmask_dir, base_name+'-batch-{}-outs.npy'.format(i)))
+        images = np.load(
+            os.path.join(outmask_dir, base_name+'-batch-{}-images.npy'.format(i)))
+        if has_test_set:
+            masks = np.load(
+                os.path.join(outmask_dir,base_name + '-batch-{}-masks.npy'.format(i)))
+
+        final_outs.append(outs)
+        final_images.append(images)
+        if has_test_set:
+            final_masks.append(masks)
+
+    final_outs = np.asarray(final_outs)
+    final_images = np.asarray(final_images)
+    if has_test_set:
+        final_masks = np.asarray(final_masks)
+
+    print('final images shape : ', final_images.shape)
+
+    count = 0
+    # contains files with the same prefix, the same patient file
+    merge_dict = {}
+    for i in range(f_count):
+        batches = final_images[i].shape[0]
+        print(batches)
+
+        ax_params = []
+
+        for s in range(batches):
+            plt1 = np.squeeze(final_images[i][s, :, :])
+            plt3 = np.squeeze(final_outs[i][s, :, :])
+            if has_test_set:
+                plt2 = np.squeeze(final_masks[i][s, :, :])
+
+            image_data = plt1
+            segment_data = np.ma.masked_where(plt3 < 0.9, plt3)
+
+            if has_test_set:
+                masked_data = np.ma.masked_where(plt2 < 0.9, plt2)
+
+            if has_test_set:
+                ax_params.append([image_data, segment_data, file_names[count], masked_data])
+            else:
+                ax_params.append([image_data, segment_data, file_names[count]])
+                np.savetxt(os.path.join(segmentation_prediction_dir, file_names[count]+'.txt'), segment_data[1].astype(int), fmt='%i',delimiter=',')
+
+            count += 1
+
+        for idx, ax_param in enumerate(ax_params):
+            print(ax_param[2])
+
+            fig = plt.figure(num=None, figsize=(4, 4), dpi=128, facecolor='w', edgecolor='k')
+            ax = plt.Axes(fig, [0, 0, 1, 1])
+            ax.set_axis_off()
+            fig.add_axes(ax)
+            ax_param[0] = np.dstack(ax_param[0])
+            ax.imshow(ax_param[0], cmap=cm.gray)
+            if has_test_set:
+                ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
+            ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.5)
             plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
     print(count)

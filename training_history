@@ -18,3 +18,54 @@ python main_small.py \
  --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_preprocess' \
  --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_pred_output' \
  --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/neightbour_project/smallset_batch_out'
+
+python main_small.py \
+ --modality 'base' \
+ --load 'unetsmall-final-3-20-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/512' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_all_nec/AllNec_gray' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_all_nec/AllNec_gray_pred_output' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_all_nec/AllNec_gray_batch_out'
+
+python main_small.py \
+ --modality 'base' \
+ --load 'unetsmall-final-3-20-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/512' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_Nec_3364-2/Nec_3364-2_gray' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_Nec_3364-2/Nec_3364-2_gray_batch_out' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_Nec_3364-2/Nec_3364-2_gray_pred_output'
+
+python main_small.py \
+ --modality 'base' \
+ --load 'unetsmall-final-3-20-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/512' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_none/None_gray' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_none/None_gray_batch_out' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_none/None_gray_pred_output'
+
+
+Color:
+
+python main_small.py \
+ --train \
+ --epoch 20 \
+ --modality 'base' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_preprocessed' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_output'
+
+ python main_small.py \
+ --modality 'base' \
+ --load 'unetsmall-final-3-20-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_preprocessed' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/batch_out' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_output'
+
+python main_small.py \
+ --modality 'base' \
+ --load 'unetsmall-final-3-10-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_preprocessed' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/batch_out' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_output'

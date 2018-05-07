@@ -209,24 +209,24 @@ def test(train_accuracy=False, save_output=False):
 def predict():
     has_test_set = False
 
-    if not has_test_set:
-        loader = pred_loader
-
-        for batch_idx, image in tqdm(enumerate(loader)):
-
-            if args.cuda:
-                image = image.cuda()
-
-            image= Variable(image, volatile=True)
-
-            output = model(image)
-
-            output.data.round_()
-
-            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
-                    output.data.byte().cpu().numpy())
-            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
-                    image.data.float().cpu().numpy())
+    # if not has_test_set:
+    #     loader = pred_loader
+    #
+    #     for batch_idx, image in tqdm(enumerate(loader)):
+    #
+    #         if args.cuda:
+    #             image = image.cuda()
+    #
+    #         image= Variable(image, volatile=True)
+    #
+    #         output = model(image)
+    #
+    #         output.data.round_()
+    #
+    #         np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
+    #                 output.data.byte().cpu().numpy())
+    #         np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
+    #                 image.data.float().cpu().numpy())
 
     file_names = dset_pred.get_file()
     save_dir = PRED_OUTPUT

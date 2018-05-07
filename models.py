@@ -79,7 +79,7 @@ class UNet(nn.Module):
 
 
 class UNetSmall(nn.Module):
-    def __init__(self, num_channels=1, num_classes=2):
+    def __init__(self, num_channels=3, num_classes=2):
         super(UNetSmall, self).__init__()
         # num_feat = [32, 64, 128, 256]
         num_feat = [64, 128, 256, 512]
