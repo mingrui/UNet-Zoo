@@ -18,10 +18,6 @@ from tqdm import tqdm
 
 from plot_ims import plot_pred
 
-# %% import transforms
-
-MODALITY = ["t2"]
-
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
 parser.add_argument('--batch-size', type=int, default=1, metavar='N',
@@ -30,36 +26,43 @@ parser.add_argument('--test-batch-size', type=int, default=4, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
-parser.add_argument('--epochs', type=int, default=5, metavar='N',
+parser.add_argument('--epochs', type=int, default=10, metavar='N',
                     help='number of epochs to train (default: 10)')
-parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                    help='learning rate (default: 0.01)')
 parser.add_argument('--mom', type=float, default=0.99, metavar='MOM',
                     help='SGD momentum (default=0.99)')
+parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
+                    help='learning rate (default: 0.01)')
 parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
-parser.add_argument('--log-interval', type=int, default=1, metavar='N',
+parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='batches to wait before logging training status')
-parser.add_argument('--test-dataset', action='store_true', default=False,
-                    help='test on smaller dataset (default: False)')
 parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
-parser.add_argument('--drop', action='store_true', default=False,
-                    help='enables drop')
+parser.add_argument('--load', type=str, default=None, metavar='str',
+                    help='weight file to load (default: None)')
 parser.add_argument('--data-folder', type=str,
-                    default=None,
+                    default='none',
                     metavar='str',
                     help='folder that contains data (default: test dataset)')
 parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
-parser.add_argument('--load', type=str,
-                    default=None,
-                    metavar='str',
-                    help='weight file to load (default: None)')
-
-parser.add_argument('--unet', type=str,
-                    default=None,
-                    metavar='str',
+parser.add_argument('--modality', type=str, default='t2', metavar='str',
+                    help='Modality to use for training (default: flair)')
+parser.add_argument('--optimizer', type=str, default='ADAM', metavar='str',
+                    help='Optimizer (default: SGD)')
+parser.add_argument('--clip', action='store_true', default=False,
+                    help='enables gradnorm clip of 1.0 (default: False)')
+parser.add_argument('--pred-input', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--pred-output', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--batch-out-folder', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--channels', type=int, default=1, metavar='N',
+                    help='number of channels, 1 for grayscale, 3 for rgb (default: 1)')
+parser.add_argument('--save-model', type=str, default='', metavar='str',
+                    help='save model file name (default: \'\')')
+parser.add_argument('--unet', type=str, default=None, metavar='str',
                     help='unet model to load')
 
 
@@ -69,6 +72,7 @@ args.cuda = args.cuda and torch.cuda.is_available()
 if args.cuda:
     print("We are on the GPU!")
 
+MODALITY = [args.modality]
 DATA_FOLDER = args.data_folder
 
 UNET_MODEL_FILE =  args.unet

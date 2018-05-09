@@ -284,22 +284,6 @@ class BraTSDatasetLSTM(Dataset):
         else:
             folder = dataset_folder + "test/"
 
-        # print("files : ", os.listdir(folder))
-        # print("Folder : ", folder)
-        # max_file = 0
-        # min_file = 10000000
-        # for file in os.listdir(folder):
-        #     if file.endswith(".png"):
-        #         m = re.search('([0-9]*[_])([0-9]*)', file)
-        #         pic_num = int(m.group(2))
-        #         if pic_num > max_file:
-        #             max_file = pic_num
-        #         if pic_num < min_file:
-        #             min_file = pic_num
-
-        # print('min file number: ', min_file)
-        # print('max file number: ', max_file)
-
         png_list = []
         for file in os.listdir(folder):
             if file.endswith('.png'):
@@ -318,10 +302,7 @@ class BraTSDatasetLSTM(Dataset):
         # print(len(unique_list))
         def numeric_sort_lambda(x):
             x = x.split('.')[0]
-            if 'valid' in x:
-                return int(x.split('_')[4])
-            else:
-                return int(x.split('_')[3])
+            return int(x.rpartition('_')[-1])
 
         ready_file_list = []
         for unique in unique_list:
@@ -333,64 +314,27 @@ class BraTSDatasetLSTM(Dataset):
             ready_file_list.append(unique)
 
         for r in ready_file_list:
-            # print(r[0])
             for idx, file in enumerate(r[0][1:-1]):
+
                 self.__im.append(os.path.join(folder, file))
 
-                file1 = ''
-                file_frags = file.split('.')[0].split('_')
-                if 'valid' in file:
-                    file1 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + file_frags[3] + '_' + str(int(r[0][idx-1].split('.')[0].split('_')[4])) + '.png'
-                else:
-                    file1 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + str(int(r[0][idx-1].split('.')[0].split('_')[3])) + '.png'
-                # print(file1)
+                file_frags = list(file.split('.')[0].rpartition('_'))
+                file_frags[-1] = r[0][idx-1].split('.')[0].rpartition('_')[-1]
+                file_frags.append('.png')
+                file1 = ''.join(file_frags)
                 self.__im1.append(os.path.join(folder, file1))
 
-                file3 = ''
-                if 'valid' in file:
-                    file3 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + file_frags[3] + '_' + str(int(r[0][idx+1].split('.')[0].split('_')[4])) + '.png'
-                else:
-                    file3 = file_frags[0] + '_' + file_frags[1] + '_' + file_frags[2] + '_' + str(int(r[0][idx+1].split('.')[0].split('_')[3])) + '.png'
-                # print(file3)
+
+
+                file_frags = list(file.split('.')[0].rpartition('_'))
+                file_frags[-1] = r[0][idx+1].split('.')[0].rpartition('_')[-1]
+                file_frags.append('.png')
+                file3 = ''.join(file_frags)
                 self.__im3.append(os.path.join(folder, file3))
 
                 mask_file = get_truth_file(file, keywords[0])
-                # print(mask_file)
                 self.__mask.append(os.path.join(folder, mask_file))
 
-        # for file in os.listdir(folder):
-        #     if file.endswith(".png"):
-        #         filename = os.path.splitext(file)[0]
-        #         filename_fragments = filename.split("_")
-        #         samekeywords = list(set(filename_fragments) & set(keywords))
-        #         if len(samekeywords) == len(keywords):
-        #             # 1. read file name
-        #             # 2. read raw image
-        #             # TODO: I think we should open image only in getitem,
-        #             # otherwise memory explodes
-        #
-        #             # rawImage = getImg(folder + file)
-        #
-        #             #if (filename_fragments[2] != str(min_file)) and (filename_fragments[2] != str(max_file)):
-        #                 # print("TEST : ", filename_fragments[2])
-        #                 self.__im.append(folder + file)
-        #
-        #                 file1 = filename_fragments[0] + '_' + filename_fragments[1] + '_' + str(
-        #                     int(filename_fragments[2]) - 1) + '_' + filename_fragments[3] + '.png'
-        #
-        #                 self.__im1.append(folder + file1)
-        #
-        #                 file3 = filename_fragments[0] + '_' + filename_fragments[1] + '_' + str(
-        #                     int(filename_fragments[2]) + 1) + '_' + filename_fragments[3] + '.png'
-        #
-        #                 self.__im3.append(folder + file3)
-        #                 # 3. read mask image
-        #                 mask_file = getMaskFileName(file)
-        #                 # maskImage = getImg(folder + mask_file)
-        #                 self.__mask.append(folder + mask_file)
-        # self.dataset_size = len(self.__file)
-
-        # print("lengths : ", len(self.__im), len(self.__mask))
         self.dataset_size = len(self.__file)
 
     def __getitem__(self, index):

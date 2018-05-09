@@ -254,7 +254,9 @@ def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, h
             ax = plt.Axes(fig, [0, 0, 1, 1])
             ax.set_axis_off()
             fig.add_axes(ax)
-            ax_param[0] = np.dstack(ax_param[0])
+            if len(ax_param[0].shape) > 2:
+                # rgb
+                ax_param[0] = np.dstack(ax_param[0])
             ax.imshow(ax_param[0], cmap=cm.gray)
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)

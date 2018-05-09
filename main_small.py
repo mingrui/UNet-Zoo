@@ -15,6 +15,7 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.optim import lr_scheduler
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torchvision.transforms as tr
@@ -44,7 +45,7 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
-parser.add_argument('--log-interval', type=int, default=1, metavar='N',
+parser.add_argument('--log-interval', type=int, default=40, metavar='N',
                     help='batches to wait before logging training status')
 parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
@@ -58,7 +59,7 @@ parser.add_argument('--save', type=str, default='OutMasks', metavar='str',
                     help='Identifier to save npy arrays with')
 parser.add_argument('--modality', type=str, default='t2', metavar='str',
                     help='Modality to use for training (default: flair)')
-parser.add_argument('--optimizer', type=str, default='ADAM', metavar='str',
+parser.add_argument('--optimizer', type=str, default='SGD', metavar='str',
                     help='Optimizer (default: SGD)')
 parser.add_argument('--clip', action='store_true', default=False,
                     help='enables gradnorm clip of 1.0 (default: False)')
@@ -68,6 +69,10 @@ parser.add_argument('--pred-output', type=str, default=None, metavar='str',
                     help='folder that contains data to make predctions')
 parser.add_argument('--batch-out-folder', type=str, default=None, metavar='str',
                     help='folder that contains data to make predctions')
+parser.add_argument('--channels', type=int, default=1, metavar='N',
+                    help='number of channels, 1 for grayscale, 3 for rgb (default: 1)')
+parser.add_argument('--save-model', type=str, default='', metavar='str',
+                    help='save model file name (default: \'\')')
 
 
 args = parser.parse_args()
@@ -77,6 +82,8 @@ DATA_FOLDER = args.data_folder
 PRED_INPUT = args.pred_input
 PRED_OUTPUT = args.pred_output
 BATCH_OUT_FOLDER = args.batch_out_folder
+CHANNELS = args.channels
+SAVE_MODEL_NAME = args.save_model
 
 # %% Loading in the Dataset
 dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
@@ -106,9 +113,10 @@ print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
 print("Testing Data : ", len(test_loader.dataset))
 print("Prediction Data : ", len(pred_loader.dataset))
+print("Optimizer : ", args.optimizer)
 
 # %% Loading in the model
-model = UNetSmall()
+model = UNetSmall(num_channels=CHANNELS)
 
 if args.cuda:
     model.cuda()
@@ -120,13 +128,15 @@ if args.optimizer == 'ADAM':
     optimizer = optim.Adam(model.parameters(), lr=args.lr,
                            betas=(0.9, 0.999))
 
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
 # Defining Loss Function
 criterion = DICELossMultiClass()
 # Define Training Loop
 
 
-def train(epoch, loss_list):
+def train(epoch, scheduler, loss_list):
+    scheduler.step()
     model.train()
     for batch_idx, (image, mask) in enumerate(train_loader):
         if args.cuda:
@@ -209,24 +219,24 @@ def test(train_accuracy=False, save_output=False):
 def predict():
     has_test_set = False
 
-    # if not has_test_set:
-    #     loader = pred_loader
-    #
-    #     for batch_idx, image in tqdm(enumerate(loader)):
-    #
-    #         if args.cuda:
-    #             image = image.cuda()
-    #
-    #         image= Variable(image, volatile=True)
-    #
-    #         output = model(image)
-    #
-    #         output.data.round_()
-    #
-    #         np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
-    #                 output.data.byte().cpu().numpy())
-    #         np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
-    #                 image.data.float().cpu().numpy())
+    if not has_test_set:
+        loader = pred_loader
+
+        for batch_idx, image in tqdm(enumerate(loader)):
+
+            if args.cuda:
+                image = image.cuda()
+
+            image= Variable(image, volatile=True)
+
+            output = model(image)
+
+            output.data.round_()
+
+            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
+                    output.data.byte().cpu().numpy())
+            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
+                    image.data.float().cpu().numpy())
 
     file_names = dset_pred.get_file()
     save_dir = PRED_OUTPUT
@@ -239,9 +249,9 @@ def predict():
 if args.train:
     loss_list = []
     for i in tqdm(range(args.epochs)):
-        train(i, loss_list)
+        train(i, exp_lr_scheduler, loss_list)
         test(train_accuracy=False, save_output=False)
-        #test(train_accuracy=True, save_output=False)
+        # test(train_accuracy=True, save_output=False)
 
     plt.plot(loss_list)
     plt.title("UNetSmall bs={}, ep={}, lr={}".format(args.batch_size,
@@ -259,7 +269,7 @@ if args.train:
                                                                                     args.lr),
             np.asarray(loss_list))
 
-    torch.save(model.state_dict(), 'unetsmall-final-{}-{}-{}'.format(args.batch_size,
+    torch.save(model.state_dict(), '{}unetsmall-final-{}-{}-{}'.format(SAVE_MODEL_NAME, args.batch_size,
                                                                      args.epochs,
                                                                      args.lr))
 else:

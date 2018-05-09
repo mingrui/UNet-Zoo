@@ -44,7 +44,7 @@ python main_small.py \
  --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/20180503_none/None_gray_pred_output'
 
 
-Color:
+Color Pathology:
 
 python main_small.py \
  --train \
@@ -69,3 +69,64 @@ python main_small.py \
  --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_preprocessed' \
  --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/batch_out' \
  --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_output'
+
+python main_small.py \
+ --train \
+ --batch-size 4 \
+ --test-batch-size 8 \
+ --epoch 15 \
+ --modality 'wsi' \
+ --channels 3 \
+ --save-model 'wsi-augment-' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_preprocessed' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_output'
+
+
+python main_small.py \
+ --modality 'wsi' \
+ --channels 3 \
+ --load 'wsi-augment-unetsmall-final-4-10-0.001' \
+ --data-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color' \
+ --pred-input '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_preprocessed' \
+ --batch-out-folder '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/batch_out' \
+ --pred-output '/mnt/DATA/datasets/Pathology/Necrosis_Segmentation/color/pred_output'
+
+
+
+
+
+
+
+
+Tiantan 2017-11
+
+python main_small.py \
+ --train \
+ --epoch 10 \
+ --modality 't2' \
+ --channels 1 \
+ --save-model 'Tiantan-2017-11-' \
+ --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
+ --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test' \
+ --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_pred_output'
+
+python main_small.py \
+ --load 'Tiantan-2017-11-unetsmall-final-3-10-0.001' \
+ --modality 't2' \
+ --channels 1 \
+ --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
+ --batch-out-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_batch_out' \
+ --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test' \
+ --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_pred_output'
+
+python main_bdclstm.py \
+ --train \
+ --epoc 10 \
+ --modality 't2' \
+ --channels 1 \
+ --unet 'Tiantan-2017-11-unetsmall-final-3-10-0.001' \
+ --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
+ --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test' \
+ --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_pred_output'
+
