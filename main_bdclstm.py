@@ -16,7 +16,7 @@ from models import *
 import numpy as np
 from tqdm import tqdm
 
-from plot_ims import plot_pred
+from plot_ims import save_prediction
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
@@ -242,7 +242,7 @@ def predict():
     save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/Pred'
     base_name = 'OutMasks'
     out_folder = '/mnt/960EVO/workspace/UNet-Zoo/npy-files/out-files/'
-    plot_pred(file_names, save_dir, base_name, out_folder)
+    save_prediction(file_names, save_dir, base_name, out_folder)
 
 
 if args.train:

@@ -27,7 +27,7 @@ from tqdm import tqdm
 import scipy.io as sio
 import numpy as np
 
-from plot_ims import plot_pred, plot_test
+from plot_ims import save_prediction, plot_test
 
 # %% import transforms
 
@@ -216,34 +216,67 @@ def test(train_accuracy=False, save_output=False):
         print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(
             test_loss))
 
-def predict():
-    has_test_set = False
+def save_test():
+    test_loss = 0
 
-    if not has_test_set:
-        loader = pred_loader
+    loader = test_loader
 
-        for batch_idx, image in tqdm(enumerate(loader)):
+    for batch_idx, (image, mask) in tqdm(enumerate(loader)):
+        if args.cuda:
+            image, mask = image.cuda(), mask.cuda()
 
-            if args.cuda:
-                image = image.cuda()
+        image, mask = Variable(image, volatile=True), Variable(
+            mask, volatile=True)
 
-            image= Variable(image, volatile=True)
+        output = model(image)
 
-            output = model(image)
+        test_loss += criterion(output, mask).data[0]
 
-            output.data.round_()
+        output.data.round_()
 
-            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
-                    output.data.byte().cpu().numpy())
-            np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
-                    image.data.float().cpu().numpy())
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
+                image.data.float().cpu().numpy())
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-masks.npy'.format(args.save, batch_idx)),
+                mask.data.byte().cpu().numpy())
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
+                output.data.byte().cpu().numpy())
+
+    # Average Dice Coefficient
+    test_loss /= len(loader)
+    print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(test_loss))
 
     file_names = dset_pred.get_file()
     save_dir = PRED_OUTPUT
     base_name = 'OutMasks-unetsmall'
     out_folder = BATCH_OUT_FOLDER
 
-    plot_pred(file_names, save_dir, base_name, out_folder, has_test_set)
+    save_prediction(file_names, save_dir, base_name, out_folder, True)
+
+def predict():
+    loader = pred_loader
+
+    for batch_idx, image in tqdm(enumerate(loader)):
+
+        if args.cuda:
+            image = image.cuda()
+
+        image= Variable(image, volatile=True)
+
+        output = model(image)
+
+        output.data.round_()
+
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-outs.npy'.format(args.save, batch_idx)),
+                output.data.byte().cpu().numpy())
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
+                image.data.float().cpu().numpy())
+
+    file_names = dset_pred.get_file()
+    save_dir = PRED_OUTPUT
+    base_name = 'OutMasks-unetsmall'
+    out_folder = BATCH_OUT_FOLDER
+
+    save_prediction(file_names, save_dir, base_name, out_folder, False)
 
 
 if args.train:
@@ -277,3 +310,4 @@ else:
     # test(save_output=True)
     # test(train_accuracy=True)
     predict()
+    # save_test()

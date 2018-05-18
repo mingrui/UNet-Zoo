@@ -181,7 +181,7 @@ def plot_pred_backup(file_names, segmentation_prediction_dir, base_name, outmask
             plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
     print(count)
 
-def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, has_test_set = False):
+def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_dir, has_test_set = False):
     final_outs = []
     final_images = []
     final_masks = []
@@ -260,6 +260,6 @@ def plot_pred(file_names, segmentation_prediction_dir, base_name, outmask_dir, h
             ax.imshow(ax_param[0], cmap=cm.gray)
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
-            ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.5)
+            ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.15)
             plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
     print(count)

@@ -116,9 +116,9 @@ python main_small.py \
  --modality 't2' \
  --channels 1 \
  --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
- --batch-out-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_batch_out' \
- --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test' \
- --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_pred_output'
+ --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/1_tumor_layer_prediction' \
+ --batch-out-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/2_tumor_segmentation_batch' \
+ --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/3_tumor_segmentation_prediction'
 
 python main_bdclstm.py \
  --train \

@@ -26,7 +26,7 @@ from tqdm import tqdm
 import numpy as np
 import os
 
-from plot_ims import plot_pred
+from plot_ims import save_prediction
 
 # %% import transforms
 
@@ -229,7 +229,7 @@ def predict(make_batch=True):
                     image.data.float().cpu().numpy())
 
     # plot
-    plot_pred(file_names, save_dir, base_name, outmask_folder)
+    save_prediction(file_names, save_dir, base_name, outmask_folder)
 
 if args.train:
     loss_list = []
