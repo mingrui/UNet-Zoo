@@ -67,10 +67,22 @@ parser.add_argument('--optimizer', type=str, default='SGD', metavar='str',
 parser.add_argument('--pred', action='store_true', default=False,
                     help='Argument to make prediction (default: False)')
 
+parser.add_argument('--pred-input', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--pred-output', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--batch-out-folder', type=str, default=None, metavar='str',
+                    help='folder that contains data to make predctions')
+parser.add_argument('--channels', type=int, default=1, metavar='N',
+                    help='number of channels, 1 for grayscale, 3 for rgb (default: 1)')
+parser.add_argument('--save-model', type=str, default='', metavar='str',
+                    help='save model file name (default: \'\')')
+
 args = parser.parse_args()
 args.cuda = args.cuda and torch.cuda.is_available()
 
 DATA_FOLDER = args.data_folder
+SAVE_MODEL_NAME = args.save_model
 
 # %% Loading in the Dataset
 dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
@@ -91,18 +103,21 @@ test_loader = DataLoader(dset_test,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
 
-dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
-                     im_size=[args.size, args.size], transform=tr.ToTensor())
 
-pred_loader = DataLoader(dset_pred,
-                         batch_size=args.test_batch_size,
-                         shuffle=False, num_workers=1)
 
 print("Data folder: ", DATA_FOLDER)
 print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
 print("Test Data :", len(test_loader.dataset))
-print("Prediction Data : ", len(pred_loader.dataset))
+
+if args.train is not True:
+    dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
+                         im_size=[args.size, args.size], transform=tr.ToTensor())
+
+    pred_loader = DataLoader(dset_pred,
+                             batch_size=args.test_batch_size,
+                             shuffle=False, num_workers=1)
+    print("Prediction Data : ", len(pred_loader.dataset))
 
 # %% Loading in the model
 model = UNet()
@@ -253,9 +268,10 @@ if args.train:
                                                                                args.lr),
             np.asarray(loss_list))
 
-    torch.save(model.state_dict(), 'unet-final-{}-{}-{}'.format(args.batch_size,
-                                                                args.epochs,
-                                                                args.lr))
+
+    torch.save(model.state_dict(), '{}unetsmall-final-{}-{}-{}'.format(SAVE_MODEL_NAME, args.batch_size,
+                                                                     args.epochs,
+                                                                     args.lr))
 
 # elif args.pred:
 #     predict()

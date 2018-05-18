@@ -130,3 +130,11 @@ python main_bdclstm.py \
  --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test' \
  --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_pred_output'
 
+
+python main.py \
+ --train \
+ --epoch 10 \
+ --modality 't2' \
+ --channels 1 \
+ --save-model 'Tiantan-2017-11-' \
+ --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
