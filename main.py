@@ -82,13 +82,16 @@ args = parser.parse_args()
 args.cuda = args.cuda and torch.cuda.is_available()
 
 DATA_FOLDER = args.data_folder
+PRED_INPUT = args.pred_input
+PRED_OUTPUT = args.pred_output
+BATCH_OUT_FOLDER = args.batch_out_folder
+CHANNELS = args.channels
 SAVE_MODEL_NAME = args.save_model
 
 # %% Loading in the Dataset
 dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
                               keywords=[args.modality],
-                              im_size=[args.size, args.size],
-                              transform=tr.ToTensor())
+                              im_size=[args.size, args.size], transform=tr.ToTensor())
 
 train_loader = DataLoader(dset_train,
                           batch_size=args.batch_size,
@@ -96,19 +99,17 @@ train_loader = DataLoader(dset_train,
 
 dset_test = BraTSDatasetUnet(DATA_FOLDER, train=False,
                              keywords=[args.modality],
-                             im_size=[args.size, args.size],
-                             transform=tr.ToTensor())
+                             im_size=[args.size, args.size], transform=tr.ToTensor())
 
 test_loader = DataLoader(dset_test,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
 
-
-
 print("Data folder: ", DATA_FOLDER)
 print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
-print("Test Data :", len(test_loader.dataset))
+print("Testing Data : ", len(test_loader.dataset))
+print("Optimizer : ", args.optimizer)
 
 if args.train is not True:
     dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
@@ -215,33 +216,29 @@ def test(train_accuracy=False, save_output=False):
         print('\nTest Set: Average DICE Coefficient: {:.4f})\n'.format(
             test_loss))
 
-def predict(make_batch=True):
+def predict():
+    loader = pred_loader
+
+    for batch_idx, image in tqdm(enumerate(loader)):
+
+        if args.cuda:
+            image = image.cuda()
+
+        image= Variable(image, volatile=True)
+
+        output = model(image)
+
+        output.data.round_()
+
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-batch-{}-outs.npy'.format(args.save,batch_idx)),
+                output.data.byte().cpu().numpy())
+        np.save(os.path.join(BATCH_OUT_FOLDER, '{}-batch-{}-images.npy'.format(args.save,batch_idx)),
+                image.data.float().cpu().numpy())
+
     file_names = dset_pred.get_file()
-    save_dir = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/segmentation_prediction'
+    save_dir = PRED_OUTPUT
     base_name = 'OutMasks'
-    outmask_folder = '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/outmasks'
-
-    # if batch files has not been generated, make batch
-    if make_batch:
-        loader = pred_loader
-
-        for batch_idx, image in tqdm(enumerate(loader)):
-
-            if args.cuda:
-                image = image.cuda()
-
-            image= Variable(image, volatile=True)
-
-            output = model(image)
-
-            output.data.round_()
-
-            np.save(os.path.join(outmask_folder, '{}-batch-{}-outs.npy'.format(args.save,
-                                                                                  batch_idx)),
-                    output.data.byte().cpu().numpy())
-            np.save(os.path.join(outmask_folder, './npy-files/out-files/{}-batch-{}-images.npy'.format(args.save,
-                                                                                     batch_idx)),
-                    image.data.float().cpu().numpy())
+    outmask_folder = BATCH_OUT_FOLDER
 
     # plot
     save_prediction(file_names, save_dir, base_name, outmask_folder)
