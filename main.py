@@ -112,7 +112,7 @@ print("Testing Data : ", len(test_loader.dataset))
 print("Optimizer : ", args.optimizer)
 
 if args.train is not True:
-    dset_pred = UnetPred(DATA_FOLDER, keywords=[args.modality],
+    dset_pred = UnetPred(PRED_INPUT, keywords=[args.modality],
                          im_size=[args.size, args.size], transform=tr.ToTensor())
 
     pred_loader = DataLoader(dset_pred,

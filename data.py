@@ -18,7 +18,7 @@ class UnetPred(Dataset):
     im_wd = 0
     dataset_size = 0
 
-    def __init__(self, dataset_folder, predict_folder, keywords=["P1", "1", "flair"], im_size=[128, 128], transform=None):
+    def __init__(self, predict_folder, keywords=["P1", "1", "flair"], im_size=[128, 128], transform=None):
 
         self.__file = []
         self.__im = []
