@@ -112,8 +112,16 @@ print("Data folder: ", DATA_FOLDER)
 print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
 print("Testing Data : ", len(test_loader.dataset))
-print("Prediction Data : ", len(pred_loader.dataset))
 print("Optimizer : ", args.optimizer)
+
+if args.train is not True:
+    dset_pred = UnetPred(PRED_INPUT, keywords=[args.modality],
+                         im_size=[args.size, args.size], transform=tr.ToTensor())
+
+    pred_loader = DataLoader(dset_pred,
+                             batch_size=args.test_batch_size,
+                             shuffle=False, num_workers=1)
+    print("Prediction Data : ", len(pred_loader.dataset))
 
 # %% Loading in the model
 model = UNetSmall(num_channels=CHANNELS)
