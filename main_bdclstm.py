@@ -87,9 +87,11 @@ dset_test = BraTSDatasetLSTM(
 test_loader = DataLoader(
     dset_test, batch_size=args.test_batch_size, shuffle=False, num_workers=1)
 
+print("Data folder: ", DATA_FOLDER)
+print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))
 print("Testing Data : ", len(test_loader.dataset))
-
+print("Optimizer : ", args.optimizer)
 if args.train is not True:
     dset_pred = LstmPred(DATA_FOLDER, keywords=MODALITY,
                          im_size=[args.size, args.size], transform=tr.ToTensor())
