@@ -126,9 +126,7 @@ python main_bdclstm.py \
  --modality 't2' \
  --channels 1 \
  --unet 'Tiantan-2017-11-unetsmall-final-3-10-0.001' \
- --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
- --pred-input '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test' \
- --pred-output '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/test_pred_output'
+ --data-folder '/mnt/DATA/datasets/all-t2/1-doctors-segmentation-png/512/' \
 
 
 python main.py \
@@ -138,3 +136,5 @@ python main.py \
  --channels 1 \
  --save-model 'Tiantan-2017-11-' \
  --data-folder '/mnt/960EVO/datasets/tiantan/2017-11/tiantan_preprocessed_png/512/' \
+
+

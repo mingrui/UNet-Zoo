@@ -34,7 +34,7 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--cuda', action='store_true', default=True,
                     help='enables CUDA training (default: False)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=100, metavar='N',
                     help='batches to wait before logging training status')
 parser.add_argument('--size', type=int, default=512, metavar='N',
                     help='imsize')
