@@ -102,12 +102,6 @@ test_loader = DataLoader(dset_test,
                          batch_size=args.test_batch_size,
                          shuffle=False, num_workers=1)
 
-dset_pred = UnetPred(PRED_INPUT, keywords=[args.modality],
-                     im_size=[args.size, args.size], transform=tr.ToTensor())
-
-pred_loader = DataLoader(dset_pred,
-                         batch_size=args.test_batch_size,
-                         shuffle=False, num_workers=1)
 print("Data folder: ", DATA_FOLDER)
 print("Load : ", args.load)
 print("Training Data : ", len(train_loader.dataset))

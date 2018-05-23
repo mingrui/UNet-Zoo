@@ -87,15 +87,16 @@ dset_test = BraTSDatasetLSTM(
 test_loader = DataLoader(
     dset_test, batch_size=args.test_batch_size, shuffle=False, num_workers=1)
 
-dset_pred = LstmPred(DATA_FOLDER, keywords=MODALITY,
-                     im_size=[args.size, args.size], transform=tr.ToTensor())
-pred_loader = DataLoader(dset_pred,
-                         batch_size=args.test_batch_size,
-                         shuffle=False, num_workers=1)
-
 print("Training Data : ", len(train_loader.dataset))
 print("Testing Data : ", len(test_loader.dataset))
-print("Prediction Data : ", len(pred_loader.dataset))
+
+if args.train is not True:
+    dset_pred = LstmPred(DATA_FOLDER, keywords=MODALITY,
+                         im_size=[args.size, args.size], transform=tr.ToTensor())
+    pred_loader = DataLoader(dset_pred,
+                             batch_size=args.test_batch_size,
+                             shuffle=False, num_workers=1)
+    print("Prediction Data : ", len(pred_loader.dataset))
 
 # %% Loading in the models
 unet = UNetSmall()
