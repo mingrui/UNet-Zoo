@@ -89,29 +89,29 @@ CHANNELS = args.channels
 SAVE_MODEL_NAME = args.save_model
 
 # %% Loading in the Dataset
-dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
-                              keywords=[args.modality],
-                              im_size=[args.size, args.size], transform=tr.ToTensor())
+if args.train:
+    dset_train = BraTSDatasetUnet(DATA_FOLDER, train=True,
+                                  keywords=[args.modality],
+                                  im_size=[args.size, args.size], transform=tr.ToTensor())
 
-train_loader = DataLoader(dset_train,
-                          batch_size=args.batch_size,
-                          shuffle=True, num_workers=1)
+    train_loader = DataLoader(dset_train,
+                              batch_size=args.batch_size,
+                              shuffle=True, num_workers=1)
 
-dset_test = BraTSDatasetUnet(DATA_FOLDER, train=False,
-                             keywords=[args.modality],
-                             im_size=[args.size, args.size], transform=tr.ToTensor())
+    dset_test = BraTSDatasetUnet(DATA_FOLDER, train=False,
+                                 keywords=[args.modality],
+                                 im_size=[args.size, args.size], transform=tr.ToTensor())
 
-test_loader = DataLoader(dset_test,
-                         batch_size=args.test_batch_size,
-                         shuffle=False, num_workers=1)
+    test_loader = DataLoader(dset_test,
+                             batch_size=args.test_batch_size,
+                             shuffle=False, num_workers=1)
 
-print("Data folder: ", DATA_FOLDER)
-print("Load : ", args.load)
-print("Training Data : ", len(train_loader.dataset))
-print("Testing Data : ", len(test_loader.dataset))
-print("Optimizer : ", args.optimizer)
-
-if args.train is not True:
+    print("Data folder: ", DATA_FOLDER)
+    print("Load : ", args.load)
+    print("Training Data : ", len(train_loader.dataset))
+    print("Testing Data : ", len(test_loader.dataset))
+    print("Optimizer : ", args.optimizer)
+else:
     dset_pred = UnetPred(PRED_INPUT, keywords=[args.modality],
                          im_size=[args.size, args.size], transform=tr.ToTensor())
 
