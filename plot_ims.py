@@ -262,4 +262,5 @@ def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
             ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.15)
             plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
+            plt.close()
     print(count)
