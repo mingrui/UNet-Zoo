@@ -9,6 +9,7 @@ import scipy.io as sio
 # outs = np.load('Numpy-batch-7-outs.npy')
 # masks = np.load('Numpy-batch-7-masks.npy')
 from PIL import Image
+from inspect import currentframe, getframeinfo
 
 curr_pos = 0
 
@@ -216,20 +217,25 @@ def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_
     if has_test_set:
         final_masks = np.asarray(final_masks)
 
-    print('final images shape : ', final_images.shape)
+    print('batch images shape : ', final_images.shape)
 
     count = 0
     # contains files with the same prefix, the same patient file
     merge_dict = {}
     for i in range(f_count):
         batches = final_images[i].shape[0]
-        print(batches)
+        # print('batches : ', batches)
 
         ax_params = []
 
         for s in range(batches):
             plt1 = np.squeeze(final_images[i][s, :, :])
             plt3 = np.squeeze(final_outs[i][s, :, :])
+
+            # frameinfo = getframeinfo(currentframe())
+            # print(frameinfo.filename, frameinfo.lineno)
+            # print('plt1.shape : ', plt1.shape)
+
             if has_test_set:
                 plt2 = np.squeeze(final_masks[i][s, :, :])
 
@@ -260,7 +266,11 @@ def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_
             ax.imshow(ax_param[0], cmap=cm.gray)
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
-            ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.15)
+            # TODO: shape problem
+            try:
+                ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.15)
+            except:
+                ax.imshow(ax_param[1], cmap=cm.autumn, alpha=0.15)
             plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
             plt.close()
     print(count)

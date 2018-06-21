@@ -153,7 +153,7 @@ def train(epoch, scheduler, loss_list):
         output = model(image)
 
         loss = criterion(output, mask)
-        loss_list.append(loss.data[0])
+        loss_list.append(loss.item())
 
         loss.backward()
         optimizer.step()
@@ -164,7 +164,7 @@ def train(epoch, scheduler, loss_list):
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(image), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.data[0]))
+                100. * batch_idx / len(train_loader), loss.item()))
 
 
 def test(train_accuracy=False, save_output=False):
@@ -251,7 +251,7 @@ def save_test():
 
     file_names = dset_pred.get_file()
     save_dir = PRED_OUTPUT
-    base_name = 'OutMasks-unetsmall'
+    base_name = 'OutMasks'
     out_folder = BATCH_OUT_FOLDER
 
     save_prediction(file_names, save_dir, base_name, out_folder, True)
