@@ -240,6 +240,8 @@ def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_
                 plt2 = np.squeeze(final_masks[i][s, :, :])
 
             image_data = plt1
+            # print('plt3.shape : ', plt3.shape)
+            # print('plt3 : ', plt3)
             segment_data = np.ma.masked_where(plt3 < 0.9, plt3)
 
             if has_test_set:
@@ -248,8 +250,18 @@ def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_
             if has_test_set:
                 ax_params.append([image_data, segment_data, file_names[count], masked_data])
             else:
+                # print('len(file_names) : ', len(file_names), 'count : ', count)
                 ax_params.append([image_data, segment_data, file_names[count]])
-                np.savetxt(os.path.join(segmentation_prediction_dir, file_names[count]+'.txt'), segment_data[1].astype(int), fmt='%i',delimiter=',')
+                # print('image_data.shape : ', image_data.shape)
+                # print('segment_data.shape : ', segment_data.shape)
+                # print('segment_data.max() : ', segment_data.max())
+                # print('segment_data : ', segment_data)
+                if len(segment_data.shape) == 2:
+                    # bdclstm
+                    np.savetxt(os.path.join(segmentation_prediction_dir, os.path.splitext(file_names[count])[0]+'.txt'), segment_data.astype(int), fmt='%i',delimiter=',')
+                elif len(segment_data.shape) == 3:
+                    # unet
+                    np.savetxt(os.path.join(segmentation_prediction_dir, os.path.splitext(file_names[count])[0]+'.txt'), segment_data[1].astype(int), fmt='%i',delimiter=',')
 
             count += 1
 
@@ -267,9 +279,11 @@ def save_prediction(file_names, segmentation_prediction_dir, base_name, outmask_
             if has_test_set:
                 ax.imshow(ax_param[3], cmap=cm.jet, alpha=0.3)
             # TODO: shape problem
-            try:
+            if len(ax_param[1].shape) == 3:
+                # unet
                 ax.imshow(ax_param[1][1], cmap=cm.autumn, alpha=0.15)
-            except:
+            elif len(ax_param[1].shape) == 2:
+                # bdclstm
                 ax.imshow(ax_param[1], cmap=cm.autumn, alpha=0.15)
             plt.savefig(os.path.join(segmentation_prediction_dir, ax_param[2]))
             plt.close()

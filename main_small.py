@@ -27,15 +27,17 @@ from tqdm import tqdm
 import scipy.io as sio
 import numpy as np
 
+import shutil
+
 from plot_ims import save_prediction, plot_test
 
 # %% import transforms
 
 # %% Training settings
 parser = argparse.ArgumentParser(description='UNet+BDCLSTM for BraTS Dataset')
-parser.add_argument('--batch-size', type=int, default=1, metavar='N',
+parser.add_argument('--batch-size', type=int, default=4, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--test-batch-size', type=int, default=1, metavar='N',
+parser.add_argument('--test-batch-size', type=int, default=4, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--train', action='store_true', default=False,
                     help='Argument to train model (default: False)')
@@ -180,12 +182,12 @@ def test(train_accuracy=False, save_output=False):
         if args.cuda:
             image, mask = image.cuda(), mask.cuda()
 
-        image, mask = Variable(image, volatile=True), Variable(
-            mask, volatile=True)
+        with torch.no_grad():
+            image, mask = Variable(image), Variable(mask)
 
         output = model(image)
 
-        test_loss += criterion(output, mask).data[0]
+        test_loss += criterion(output, mask).item()
 
         output.data.round_()
 
@@ -259,12 +261,22 @@ def save_test():
 def predict():
     loader = pred_loader
 
+    file_names = dset_pred.get_file()
+    save_dir = PRED_OUTPUT
+    base_name = 'OutMasks-unetsmall'
+    out_folder = BATCH_OUT_FOLDER
+
+    if os.path.exists(BATCH_OUT_FOLDER):
+        shutil.rmtree(BATCH_OUT_FOLDER)
+    os.mkdir(BATCH_OUT_FOLDER)
+
     for batch_idx, image in tqdm(enumerate(loader)):
 
         if args.cuda:
             image = image.cuda()
 
-        image= Variable(image, volatile=True)
+        with torch.no_grad():
+            image= Variable(image)
 
         output = model(image)
 
@@ -274,11 +286,6 @@ def predict():
                 output.data.byte().cpu().numpy())
         np.save(os.path.join(BATCH_OUT_FOLDER, '{}-unetsmall-batch-{}-images.npy'.format(args.save,batch_idx)),
                 image.data.float().cpu().numpy())
-
-    file_names = dset_pred.get_file()
-    save_dir = PRED_OUTPUT
-    base_name = 'OutMasks-unetsmall'
-    out_folder = BATCH_OUT_FOLDER
 
     save_prediction(file_names, save_dir, base_name, out_folder)
 

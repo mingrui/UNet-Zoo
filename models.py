@@ -81,8 +81,12 @@ class UNet(nn.Module):
 class UNetSmall(nn.Module):
     def __init__(self, num_channels=1, num_classes=2):
         super(UNetSmall, self).__init__()
+        features = 16
+
+        # by default:
         # num_feat = [32, 64, 128, 256]
-        num_feat = [16, 32, 64, 128]
+        # if gpu memory not enough, set features to 16
+        num_feat = [features, 2*features, 2*2*features, 2*2*2*features]
 
         self.down1 = nn.Sequential(Conv3x3Small(num_channels, num_feat[0]))
 
